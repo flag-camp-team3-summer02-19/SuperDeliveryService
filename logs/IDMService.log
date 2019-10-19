@@ -1,0 +1,27 @@
+[2019/10/18 21:07:10][CONFIG][initService]  Starting service...
+[2019/10/18 21:07:10][CONFIG][currentConfigs]  Scheme: http://
+[2019/10/18 21:07:10][CONFIG][currentConfigs]  Hostname: 0.0.0.0
+[2019/10/18 21:07:10][CONFIG][currentConfigs]  Port: 1101
+[2019/10/18 21:07:10][CONFIG][currentConfigs]  Path: /api/idm
+[2019/10/18 21:07:10][CONFIG][currentConfigs]  Logger output directory: ./logs/
+[2019/10/18 21:07:10][CONFIG][currentConfigs]  Logger output file: IDMService.log
+[2019/10/18 21:07:10][CONFIG][currentConfigs]  Database hostname: localhost
+[2019/10/18 21:07:10][CONFIG][currentConfigs]  Database port: 3306
+[2019/10/18 21:07:10][CONFIG][currentConfigs]  Database username: null
+[2019/10/18 21:07:10][CONFIG][currentConfigs]  Database password provided? false
+[2019/10/18 21:07:10][CONFIG][currentConfigs]  Database name: null
+[2019/10/18 21:07:10][CONFIG][currentConfigs]  Database driver: com.mysql.cj.jdbc.Driver
+[2019/10/18 21:07:10][CONFIG][currentConfigs]  Database connection settings: ?autoReconnect=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=PST
+[2019/10/18 21:07:10][CONFIG][currentConfigs]  timeout: 1000000
+[2019/10/18 21:07:10][CONFIG][currentConfigs]  expiration: 1000000
+[2019/10/18 21:07:10][CONFIG][connectToDatabase]  Connecting to database...
+[2019/10/18 21:07:10][CONFIG][connectToDatabase]  Database configurations not valid. Cannot connect to database.
+[2019/10/18 21:07:10][CONFIG][initHTTPServer]  Initializing HTTP server...
+[2019/10/18 21:07:10][CONFIG][initHTTPServer]  Building URI from configs...
+[2019/10/18 21:07:10][CONFIG][initHTTPServer]  Final URI: http://0.0.0.0:1101/api/idm
+[2019/10/18 21:07:10][CONFIG][initHTTPServer]  Set Jersey resources.
+[2019/10/18 21:07:10][CONFIG][initHTTPServer]  Set Jackson as serializer.
+[2019/10/18 21:07:10][CONFIG][initHTTPServer]  Set session timeout and token expiration.
+[2019/10/18 21:07:10][CONFIG][initHTTPServer]  Starting HTTP server...
+[2019/10/18 21:07:11][CONFIG][initHTTPServer]  HTTP server started.
+[2019/10/18 21:07:11][CONFIG][initService]  Service initialized.
