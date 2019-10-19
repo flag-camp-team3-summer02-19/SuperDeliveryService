@@ -20,6 +20,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import static SuperDelivery.service.idm.database.MySQLTableCreation.CreateTable;
+
 public class IDMService {
 
     public static final String RESOURCE_PATH = "SuperDelivery.service.idm.resources";
@@ -32,6 +34,7 @@ public class IDMService {
     public static void main(String[] args) {
         service = new IDMService();
         service.initService(args);
+        CreateTable();
     }
 
     private void initService(String[] args) {
