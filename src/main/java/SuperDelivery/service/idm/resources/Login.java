@@ -59,6 +59,7 @@ public class Login {
                     lrm.setResultCode(120);
                     lrm.setMessage("User logged in successfully.");
                     Session s = Session.createSession(email);
+                    insertToSession(s);
                     String sessionID = s.getSessionID().toString();
                     lrm.setSessionID(sessionID);
                     return Response.status(Response.Status.OK).entity(new LoginResponseModel(120,"User logged in successfully.",sessionID)).build();
