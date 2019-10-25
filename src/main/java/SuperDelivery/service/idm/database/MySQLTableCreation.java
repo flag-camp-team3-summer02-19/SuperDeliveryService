@@ -80,7 +80,7 @@ public class MySQLTableCreation {
             statement.execute(sql);
 
             // Step 4 Insert data into session_status table
-            sql = "INSERT INTO session_status (statusId, status) VALUES (1, 'ACTIVE'), (2, 'CLOSED'), (3, 'EXPIRED'), (4, 'REVOKED');";
+            sql = "INSERT IGNORE INTO session_status (statusId, status) VALUES (1, 'ACTIVE'), (2, 'CLOSED'), (3, 'EXPIRED'), (4, 'REVOKED');";
             statement.execute(sql);
 
             ServiceLogger.LOGGER.config("Database table setup successfully.");

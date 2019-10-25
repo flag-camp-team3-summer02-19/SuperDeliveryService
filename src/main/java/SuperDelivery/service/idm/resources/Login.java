@@ -62,7 +62,7 @@ public class Login {
                     insertToSession(s);
                     String sessionID = s.getSessionID().toString();
                     lrm.setSessionID(sessionID);
-                    return Response.status(Response.Status.OK).entity(new LoginResponseModel(120,"User logged in successfully.",sessionID)).build();
+                    return Response.status(Response.Status.OK).entity(lrm).build();
                 }
                 else{                                                       //case 11
                     lrm.setResultCode(230);
@@ -92,7 +92,7 @@ public class Login {
         }
         lrm.setResultCode(-1);                                //case -1
         lrm.setMessage("Internal Server Error");
-        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(lrm).build();
 
     }
 }
