@@ -54,19 +54,18 @@ public class Helper {
             String password = getHashedPass(hashedPassword);
             // Construct the query
             String query =
-                    "INSERT INTO users (email, status, plevel, salt, pword) VALUES (?, ?, ?, ?, ?);";
+                    "INSERT INTO users (email, salt, pword) VALUES (?, ?, ?);";
             // Create the prepared statement
             PreparedStatement ps = IDMService.getCon().prepareStatement(query);
             // Set the parameters
             ps.setString(1, requestModel.getEmail());
-            ps.setInt(2,1);
-            ps.setInt(3, 5);
-            ps.setString(4, aSalt);
-            ps.setString(5, password);
+            ps.setString(2, aSalt);
+            ps.setString(3, password);
 
             // Execute query
             ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
             ps.execute();
+            ServiceLogger.LOGGER.info("User registered successfully");
             return true;
         } catch (SQLException e) {
             ServiceLogger.LOGGER.warning("Unable to insert User " + requestModel.getEmail());
@@ -184,17 +183,16 @@ public class Helper {
             ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
             ResultSet rs = ps.executeQuery();
             ServiceLogger.LOGGER.info("Query succeeded.");
-            rs.next();
-            String sessionID = rs.getString(1);
-            if(sessionID != null){
+            if (rs.next()) {
+                String sessionID = rs.getString(1);
                 ServiceLogger.LOGGER.info("This session exists.");
                 String query2 = "UPDATE sessions SET status=4 WHERE sessionID=?;";
                 PreparedStatement ps2 = IDMService.getCon().prepareStatement(query2);
                 ps2.setString(1,sessionID);
                 ps2.execute();
+            } else {
+                ServiceLogger.LOGGER.info("This session does not exist.");
             }
-
-            ServiceLogger.LOGGER.info("This session does not exist.");
         } catch (SQLException e) {
             ServiceLogger.LOGGER.warning("Error during query.");
             e.printStackTrace();

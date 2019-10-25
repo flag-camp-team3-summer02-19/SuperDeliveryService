@@ -1,28 +1,51 @@
-[2019/10/18 23:07:36][CONFIG][initService]  Starting service...
-[2019/10/18 23:07:36][CONFIG][currentConfigs]  Scheme: http://
-[2019/10/18 23:07:36][CONFIG][currentConfigs]  Hostname: 0.0.0.0
-[2019/10/18 23:07:36][CONFIG][currentConfigs]  Port: 1234
-[2019/10/18 23:07:36][CONFIG][currentConfigs]  Path: /api/idm
-[2019/10/18 23:07:36][CONFIG][currentConfigs]  Logger output directory: ./logs/
-[2019/10/18 23:07:36][CONFIG][currentConfigs]  Logger output file: IDMService.log
-[2019/10/18 23:07:36][CONFIG][currentConfigs]  Database hostname: localhost
-[2019/10/18 23:07:36][CONFIG][currentConfigs]  Database port: 1101
-[2019/10/18 23:07:36][CONFIG][currentConfigs]  Database username: root
-[2019/10/18 23:07:36][CONFIG][currentConfigs]  Database password provided? true
-[2019/10/18 23:07:36][CONFIG][currentConfigs]  Database name: SuperDelivery
-[2019/10/18 23:07:36][CONFIG][currentConfigs]  Database driver: com.mysql.cj.jdbc.Driver
-[2019/10/18 23:07:36][CONFIG][currentConfigs]  Database connection settings: ?autoReconnect=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=PST
-[2019/10/18 23:07:36][CONFIG][currentConfigs]  timeout: 1000000
-[2019/10/18 23:07:36][CONFIG][currentConfigs]  expiration: 1000000
-[2019/10/18 23:07:36][CONFIG][connectToDatabase]  Connecting to database...
-[2019/10/18 23:07:36][CONFIG][connectToDatabase]  Database URL: jdbc:mysql://localhost:1101/SuperDelivery?autoReconnect=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=PST
-[2019/10/18 23:07:37][CONFIG][connectToDatabase]  Connected to database: jdbc:mysql://localhost:1101/SuperDelivery?autoReconnect=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=PST
-[2019/10/18 23:07:37][CONFIG][initHTTPServer]  Initializing HTTP server...
-[2019/10/18 23:07:37][CONFIG][initHTTPServer]  Building URI from configs...
-[2019/10/18 23:07:37][CONFIG][initHTTPServer]  Final URI: http://0.0.0.0:1234/api/idm
-[2019/10/18 23:07:37][CONFIG][initHTTPServer]  Set Jersey resources.
-[2019/10/18 23:07:37][CONFIG][initHTTPServer]  Set Jackson as serializer.
-[2019/10/18 23:07:37][CONFIG][initHTTPServer]  Set session timeout and token expiration.
-[2019/10/18 23:07:37][CONFIG][initHTTPServer]  Starting HTTP server...
-[2019/10/18 23:07:37][CONFIG][initHTTPServer]  HTTP server started.
-[2019/10/18 23:07:37][CONFIG][initService]  Service initialized.
+[2019/10/24 17:29:11][CONFIG][initService]  Starting service...
+[2019/10/24 17:29:11][CONFIG][currentConfigs]  Scheme: http://
+[2019/10/24 17:29:11][CONFIG][currentConfigs]  Hostname: 0.0.0.0
+[2019/10/24 17:29:11][CONFIG][currentConfigs]  Port: 1234
+[2019/10/24 17:29:11][CONFIG][currentConfigs]  Path: /api/idm
+[2019/10/24 17:29:11][CONFIG][currentConfigs]  Logger output directory: ./logs/
+[2019/10/24 17:29:11][CONFIG][currentConfigs]  Logger output file: IDMService.log
+[2019/10/24 17:29:11][CONFIG][currentConfigs]  Database hostname: localhost
+[2019/10/24 17:29:11][CONFIG][currentConfigs]  Database port: 3306
+[2019/10/24 17:29:11][CONFIG][currentConfigs]  Database username: root
+[2019/10/24 17:29:11][CONFIG][currentConfigs]  Database password provided? true
+[2019/10/24 17:29:11][CONFIG][currentConfigs]  Database name: SuperDelivery
+[2019/10/24 17:29:11][CONFIG][currentConfigs]  Database driver: com.mysql.cj.jdbc.Driver
+[2019/10/24 17:29:11][CONFIG][currentConfigs]  Database connection settings: ?autoReconnect=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=PST
+[2019/10/24 17:29:11][CONFIG][currentConfigs]  timeout: 1000000
+[2019/10/24 17:29:11][CONFIG][currentConfigs]  expiration: 1000000
+[2019/10/24 17:29:11][CONFIG][connectToDatabase]  Connecting to database...
+[2019/10/24 17:29:11][CONFIG][connectToDatabase]  Database URL: jdbc:mysql://localhost:3306/SuperDelivery?autoReconnect=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=PST
+[2019/10/24 17:29:12][CONFIG][connectToDatabase]  Connected to database: jdbc:mysql://localhost:3306/SuperDelivery?autoReconnect=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=PST
+[2019/10/24 17:29:12][CONFIG][initHTTPServer]  Initializing HTTP server...
+[2019/10/24 17:29:12][CONFIG][initHTTPServer]  Building URI from configs...
+[2019/10/24 17:29:12][CONFIG][initHTTPServer]  Final URI: http://0.0.0.0:1234/api/idm
+[2019/10/24 17:29:12][CONFIG][initHTTPServer]  Set Jersey resources.
+[2019/10/24 17:29:12][CONFIG][initHTTPServer]  Set Jackson as serializer.
+[2019/10/24 17:29:12][CONFIG][initHTTPServer]  Set session timeout and token expiration.
+[2019/10/24 17:29:12][CONFIG][initHTTPServer]  Starting HTTP server...
+[2019/10/24 17:29:12][CONFIG][initHTTPServer]  HTTP server started.
+[2019/10/24 17:29:12][CONFIG][initService]  Service initialized.
+[2019/10/24 17:29:12][CONFIG][CreateTable]  Database table setup successfully.
+[2019/10/24 17:29:55][INFO][existEmail]  Trying query: com.mysql.cj.jdbc.ClientPreparedStatement: SELECT COUNT(*) FROM users WHERE email='xuanli@gmail.com';
+[2019/10/24 17:29:55][INFO][existEmail]  Query succeeded.
+[2019/10/24 17:29:55][INFO][existEmail]  This email exists.
+[2019/10/24 17:29:57][INFO][existEmail]  Trying query: com.mysql.cj.jdbc.ClientPreparedStatement: SELECT COUNT(*) FROM users WHERE email='xuanli@gmail.com';
+[2019/10/24 17:29:57][INFO][existEmail]  Query succeeded.
+[2019/10/24 17:29:57][INFO][existEmail]  This email exists.
+[2019/10/24 17:32:36][INFO][existEmail]  Trying query: com.mysql.cj.jdbc.ClientPreparedStatement: SELECT COUNT(*) FROM users WHERE email='xuanli@gmail.com';
+[2019/10/24 17:32:36][INFO][existEmail]  Query succeeded.
+[2019/10/24 17:32:36][INFO][existEmail]  This email exists.
+[2019/10/24 17:32:36][INFO][existEmail]  Trying query: com.mysql.cj.jdbc.ClientPreparedStatement: SELECT COUNT(*) FROM users WHERE email='xuanli@gmail.com';
+[2019/10/24 17:32:36][INFO][existEmail]  Query succeeded.
+[2019/10/24 17:32:36][INFO][existEmail]  This email exists.
+[2019/10/24 17:32:36][INFO][getPword]  Trying query: com.mysql.cj.jdbc.ClientPreparedStatement: SELECT pword FROM users WHERE email = 'xuanli@gmail.com';
+[2019/10/24 17:32:36][INFO][getPword]  Query succeeded.
+[2019/10/24 17:32:36][INFO][registerUser]  record pword is fd0cc3fabf317018bbc93593a69c188fd2b1658930289b89a2700c721e6c0719567076455901cabafbeff53e0305051dd14fb08c6ce94c799df6da2786dc8879
+[2019/10/24 17:32:36][INFO][getSalt]  Trying query: com.mysql.cj.jdbc.ClientPreparedStatement: SELECT salt FROM users WHERE email = 'xuanli@gmail.com';
+[2019/10/24 17:32:36][INFO][getSalt]  Query succeeded.
+[2019/10/24 17:32:36][INFO][registerUser]  record salt is f4acb01b
+[2019/10/24 17:32:36][INFO][registerUser]  user input pword is fd0cc3fabf317018bbc93593a69c188fd2b1658930289b89a2700c721e6c0719567076455901cabafbeff53e0305051dd14fb08c6ce94c799df6da2786dc8879
+[2019/10/24 17:32:36][INFO][revokeOldSession]  Trying query: com.mysql.cj.jdbc.ClientPreparedStatement: SELECT sessionID FROM sessions WHERE email='xuanli@gmail.com' AND status=1;
+[2019/10/24 17:32:36][INFO][revokeOldSession]  Query succeeded.
+[2019/10/24 17:32:36][INFO][revokeOldSession]  This session does not exist.

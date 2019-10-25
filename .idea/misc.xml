@@ -4,5 +4,9 @@
   <component name="JavaScriptSettings">
     <option name="languageLevel" value="ES6" />
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_12" default="false" project-jdk-name="1.8" project-jdk-type="JavaSDK" />
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_12" default="false" project-jdk-name="11" project-jdk-type="JavaSDK" />
+  <component name="RSProjectComponent">
+    <option name="myShowResourcesView" value="false" />
+    <option name="myShowAllResources" value="true" />
+  </component>
 </project>

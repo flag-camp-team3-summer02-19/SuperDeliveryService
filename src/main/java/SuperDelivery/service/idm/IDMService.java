@@ -34,8 +34,7 @@ public class IDMService {
     public static void main(String[] args) {
         service = new IDMService();
         service.initService(args);
-        //I created tables manually on phpMyAdmin
-        //CreateTable();
+        CreateTable(false);
     }
 
     private void initService(String[] args) {

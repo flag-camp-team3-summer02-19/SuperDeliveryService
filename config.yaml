@@ -12,7 +12,7 @@ databaseConfig:
   dbUsername: root
   dbPassword: root
   dbHostname: localhost
-  dbPort: 1101
+  dbPort: 3306
   dbDriver: com.mysql.cj.jdbc.Driver
   dbName: SuperDelivery
   dbSettings: ?autoReconnect=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=PST
