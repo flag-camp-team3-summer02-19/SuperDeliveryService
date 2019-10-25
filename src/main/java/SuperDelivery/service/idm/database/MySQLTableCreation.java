@@ -39,19 +39,19 @@ public class MySQLTableCreation {
 
             // Step 3 Create new tables if they do not exist
             sql = "CREATE TABLE IF NOT EXISTS users ("
-                    + "user_id int AUTO_INCREMENT,"
+                    + "userId int AUTO_INCREMENT,"
                     + "email VARCHAR(50) NOT NULL,"
                     + "salt VARCHAR(8) NOT NULL,"
                     + "pword VARCHAR(128) NOT NULL,"
                     + "UNIQUE (email),"
-                    + "PRIMARY KEY (user_id)"
+                    + "PRIMARY KEY (userId)"
                     + ")";
             statement.execute(sql);
 
             sql = "CREATE TABLE IF NOT EXISTS session_status ("
-                    + "status_id int NOT NULL,"
+                    + "statusId int NOT NULL,"
                     + "status VARCHAR(20) NOT NULL,"
-                    + "PRIMARY KEY (status_id)"
+                    + "PRIMARY KEY (statusId)"
                     + ")";
             statement.execute(sql);
 
@@ -59,12 +59,12 @@ public class MySQLTableCreation {
                     + "sessionID VARCHAR(128) NOT NULL,"
                     + "email VARCHAR(50) NOT NULL,"
                     + "status int NOT NULL,"
-                    + "time_created timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,"
-                    + "last_used timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,"
-                    + "expr_time timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,"
+                    + "timeCreated timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,"
+                    + "lastUsed timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,"
+                    + "exprTime timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,"
                     + "PRIMARY KEY (sessionID),"
                     + "FOREIGN KEY (email) REFERENCES users(email) ON UPDATE CASCADE ON DELETE CASCADE,"
-                    + "FOREIGN KEY (status) REFERENCES session_status(status_id) ON UPDATE CASCADE ON DELETE CASCADE"
+                    + "FOREIGN KEY (status) REFERENCES session_status(statusId) ON UPDATE CASCADE ON DELETE CASCADE"
                     + ")";
             statement.execute(sql);
 
