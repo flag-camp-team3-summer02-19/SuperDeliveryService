@@ -34,7 +34,7 @@ public class IDMService {
     public static void main(String[] args) {
         service = new IDMService();
         service.initService(args);
-        CreateTable(false);
+        CreateTable(false, true);
     }
 
     private void initService(String[] args) {
