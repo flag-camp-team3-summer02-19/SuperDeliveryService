@@ -26,7 +26,7 @@ public class Login {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response registerUser(String jsonText, @Context HttpHeaders headers) {
+    public Response loginUser(String jsonText, @Context HttpHeaders headers) {
         ObjectMapper mapper = new ObjectMapper();
         RegisterRequestModel requestModel;
         LoginResponseModel lrm = new LoginResponseModel();

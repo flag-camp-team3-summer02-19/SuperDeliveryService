@@ -31,6 +31,10 @@ public class Token implements Comparable<Token> {
         return buf.toString();
     }
 
+    public static Token toToken(String id) {
+        return new Token(convert(id));
+    }
+
     private String format(String binS) {
         int length = 2 - binS.length();
         char[] padArray = new char[length];

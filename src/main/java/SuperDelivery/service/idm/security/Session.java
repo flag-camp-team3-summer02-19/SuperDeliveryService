@@ -12,6 +12,7 @@ public class Session {
 
     private final String email;
     private final Token sessionID;
+    private int status;
     private final Timestamp timeCreated;
     private final Timestamp exprTime;
     private Timestamp lastUsed;
@@ -23,6 +24,7 @@ public class Session {
     private Session(String email) {
         sessionID = Token.generateToken();
         this.email = email;
+        this.status = ACTIVE;
         this.timeCreated = new Timestamp(System.currentTimeMillis());
         this.lastUsed = timeCreated;
         this.exprTime = new Timestamp(System.currentTimeMillis() + TOKEN_EXPR);
@@ -33,11 +35,12 @@ public class Session {
         sessionID (token) will come from the client in a request, the lastUsed time will be known at the time the
         request happens (current time), timeCreated and exprTime come from the sessions table in the database.
      */
-    private Session(String email, Token sessionID, Timestamp timeCreated, Timestamp lastUsed, Timestamp exprTime) {
+    private Session(String email, Token sessionID, int status, Timestamp timeCreated, Timestamp lastUsed, Timestamp exprTime) {
         this.email = email;
         this.sessionID = sessionID;
+        this.status = status;
         this.timeCreated = timeCreated;
-        this.lastUsed = timeCreated;
+        this.lastUsed = lastUsed;
         this.exprTime = exprTime;
     }
 
@@ -51,16 +54,21 @@ public class Session {
     /*
         Rebuild an existing session object using the username and sessionID.
      */
-    public static Session rebuildSession(String userName, Token sessionID, Timestamp timeCreated, Timestamp lastUsed, Timestamp exprTime) {
-        return new Session(userName, sessionID, timeCreated, lastUsed, exprTime);
+    public static Session rebuildSession(String userName, Token sessionID, int status, Timestamp timeCreated, Timestamp lastUsed, Timestamp exprTime) {
+        return new Session(userName, sessionID, status, timeCreated, lastUsed, exprTime);
     }
 
     /*
-        This updates the lastUsed data member to the current time.
+        This either updates the lastUsed data member to the current time for session not time out
+        or update the session status to EXPIRED for timed out session
      */
-    public void update() {
+    public boolean isSessionTimeOut() {
         if (isDataValid()) {
             lastUsed = new Timestamp(System.currentTimeMillis());
+            return false;
+        } else {
+            status = EXPIRED;
+            return true;
         }
     }
 
@@ -103,7 +111,8 @@ public class Session {
         return getTimeCreated() == session.getTimeCreated() &&
                 getLastUsed() == session.getLastUsed() &&
                 getSessionID().equals(session.getSessionID()) &&
-                getEmail().equals(session.getEmail());
+                getEmail().equals(session.getEmail()) &&
+                getStatus() == session.getStatus();
     }
 
     public Token getSessionID() {
@@ -114,13 +123,13 @@ public class Session {
         return email;
     }
 
+    public int getStatus() {return status;}
+
     public Timestamp getTimeCreated() {
         return timeCreated;
     }
 
-    public Timestamp getLastUsed() {
-        return lastUsed;
-    }
+    public Timestamp getLastUsed() { return lastUsed; }
 
     public Timestamp getExprTime() {
         return exprTime;

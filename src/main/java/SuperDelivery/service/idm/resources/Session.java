@@ -1,7 +1,7 @@
 package SuperDelivery.service.idm.resources;
 
-import SuperDelivery.service.idm.models.RegisterRequestModel;
-import SuperDelivery.service.idm.models.RegisterResponseModel;
+import SuperDelivery.service.idm.models.LoginResponseModel;
+import SuperDelivery.service.idm.models.SessionRequestModel;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,37 +15,33 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.Arrays;
 
-import static SuperDelivery.service.idm.core.Helper.existEmail;
-import static SuperDelivery.service.idm.core.Helper.insertUserToDb;
+import static SuperDelivery.service.idm.core.HelperXuan.isSessionValid;
 
-@Path("register")
-public class Register {
+@Path("session")
+public class Session {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response registerUser(String jsonText, @Context HttpHeaders headers){
+    public Response sessionUser(String jsonText, @Context HttpHeaders headers) {
         ObjectMapper mapper = new ObjectMapper();
-        RegisterRequestModel requestModel;
-        RegisterResponseModel responseModel = new RegisterResponseModel();
+        SessionRequestModel requestModel;
+        LoginResponseModel responseModel = new LoginResponseModel();
 
         try {
-            requestModel = mapper.readValue(jsonText, RegisterRequestModel.class);
-            String email = requestModel.getEmail();
-            char[] password = requestModel.getPassword();
-            if(existEmail(email)){
-                responseModel.setResultCode(210);                            //case 16
-                responseModel.setMessage("Email already in use.");
-                Arrays.fill(password,'0');
-                return Response.status(Response.Status.OK).entity(responseModel).build();
-            }
+            requestModel = mapper.readValue(jsonText, SessionRequestModel.class);
+            String sessionID = requestModel.getSessionID();
 
-            else{
-                if(insertUserToDb(requestModel)){
-                    responseModel.setResultCode(110);                            //case 110
-                    responseModel.setMessage("User registered successfully.");
-                    return Response.status(Response.Status.OK).entity(responseModel).build();}
+            // Check if session is still valid and update database accordingly
+            if (isSessionValid(requestModel)) {
+                responseModel.setResultCode(130);
+                responseModel.setMessage("Session is valid.");
+                responseModel.setSessionID(sessionID);
+                return Response.status(Response.Status.OK).entity(responseModel).build();
+            } else {
+                responseModel.setResultCode(240);
+                responseModel.setMessage("Session times out.");
+                return Response.status(Response.Status.OK).entity(responseModel).build();
             }
 
         } catch (IOException e) {
@@ -66,6 +62,6 @@ public class Register {
                 responseModel.setMessage("Internal Server Error.");
             }
         }
-        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(responseModel).build();
     }
 }

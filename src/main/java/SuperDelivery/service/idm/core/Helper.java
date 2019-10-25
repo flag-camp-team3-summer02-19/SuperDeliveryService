@@ -152,7 +152,7 @@ public class Helper {
             // Set the parameters
             ps.setString(1, s.getEmail());
             ps.setString(2, s.getSessionID().toString());
-            ps.setInt(3,1);
+            ps.setInt(3,s.getStatus());
             ps.setTimestamp(4,s.getTimeCreated());
             ps.setTimestamp(5,s.getLastUsed());
             ps.setTimestamp(6,s.getExprTime());
