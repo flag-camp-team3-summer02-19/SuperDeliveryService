@@ -12,17 +12,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class HelperXuan {
-    public static boolean isSessionValid(SessionRequestModel requestModel) {
+    public static boolean isSessionValid(String sessionID) {
         try {
-            String email = requestModel.getEmail();
-            String sessionID = requestModel.getSessionID();
             // Construct the query
-            String query = "SELECT * FROM sessions WHERE sessionID=? AND email=? AND status=1;";
+            String query = "SELECT * FROM sessions WHERE sessionID=? AND status=1;";
             // Create the prepared statement
             PreparedStatement ps = IDMService.getCon().prepareStatement(query);
             // Set the parameters
             ps.setString(1, sessionID);
-            ps.setString(2, email);
             // Execute query
             ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
             ResultSet rs = ps.executeQuery();

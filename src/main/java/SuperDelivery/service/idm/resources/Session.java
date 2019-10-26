@@ -33,7 +33,7 @@ public class Session {
             String sessionID = requestModel.getSessionID();
 
             // Check if session is still valid and update database accordingly
-            if (isSessionValid(requestModel)) {
+            if (isSessionValid(sessionID)) {
                 responseModel.setResultCode(130);
                 responseModel.setMessage("Session is valid.");
                 responseModel.setSessionID(sessionID);
