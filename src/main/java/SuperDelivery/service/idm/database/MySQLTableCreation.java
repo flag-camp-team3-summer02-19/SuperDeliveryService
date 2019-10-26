@@ -121,7 +121,7 @@ public class MySQLTableCreation {
             statement.executeUpdate(sql);
 
             sql = "CREATE TABLE IF NOT EXISTS orders ("
-                    + "orderId VARCHAR(255) NOT NULL,"
+                    + "orderId int AUTO_INCREMENT,"
                     + "email VARCHAR(50) NOT NULL,"
                     + "orderedTime timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,"
                     + "package int NOT NULL,"
@@ -182,8 +182,8 @@ public class MySQLTableCreation {
             rs = statement.getGeneratedKeys();
             rs.next();
             int locationID = rs.getInt(1);
-            sql = "INSERT IGNORE INTO orders (orderId, email, package, delivery, location) "
-                    + "VALUES ('abcd1234', 'xuanli@gmail.com', ?, ?, ?)";
+            sql = "INSERT IGNORE INTO orders (email, package, delivery, location) "
+                    + "VALUES ('xuanli@gmail.com', ?, ?, ?)";
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, packageID);
             ps.setInt(2, deliveryID);
@@ -209,8 +209,8 @@ public class MySQLTableCreation {
             rs = statement.getGeneratedKeys();
             rs.next();
             locationID = rs.getInt(1);
-            sql = "INSERT IGNORE INTO orders (orderId, email, package, delivery, location) "
-                    + "VALUES ('efgh5678', 'xuanli@gmail.com', ?, ?, ?)";
+            sql = "INSERT IGNORE INTO orders (email, package, delivery, location) "
+                    + "VALUES ('xuanli@gmail.com', ?, ?, ?)";
             ps = conn.prepareStatement(sql);
             ps.setInt(1, packageID);
             ps.setInt(2, deliveryID);
