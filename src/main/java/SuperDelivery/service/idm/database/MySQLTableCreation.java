@@ -49,19 +49,19 @@ public class MySQLTableCreation {
 
             // Step 3 Create new tables if they do not exist
             sql = "CREATE TABLE IF NOT EXISTS users ("
-                    + "userId int AUTO_INCREMENT,"
+                    + "userID int AUTO_INCREMENT,"
                     + "email VARCHAR(50) NOT NULL,"
                     + "salt VARCHAR(8) NOT NULL,"
                     + "pword VARCHAR(128) NOT NULL,"
                     + "UNIQUE (email),"
-                    + "PRIMARY KEY (userId)"
+                    + "PRIMARY KEY (userID)"
                     + ")";
             statement.execute(sql);
 
             sql = "CREATE TABLE IF NOT EXISTS session_status ("
-                    + "statusId int NOT NULL,"
+                    + "statusID int NOT NULL,"
                     + "status VARCHAR(20) NOT NULL,"
-                    + "PRIMARY KEY (statusId)"
+                    + "PRIMARY KEY (statusID)"
                     + ")";
             statement.execute(sql);
 
@@ -74,7 +74,7 @@ public class MySQLTableCreation {
                     + "exprTime timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,"
                     + "PRIMARY KEY (sessionID),"
                     + "FOREIGN KEY (email) REFERENCES users(email) ON UPDATE CASCADE ON DELETE CASCADE,"
-                    + "FOREIGN KEY (status) REFERENCES session_status(statusId) ON UPDATE CASCADE ON DELETE CASCADE"
+                    + "FOREIGN KEY (status) REFERENCES session_status(statusID) ON UPDATE CASCADE ON DELETE CASCADE"
                     + ")";
             statement.execute(sql);
 
@@ -121,7 +121,7 @@ public class MySQLTableCreation {
             statement.executeUpdate(sql);
 
             sql = "CREATE TABLE IF NOT EXISTS orders ("
-                    + "orderId int AUTO_INCREMENT,"
+                    + "orderID int AUTO_INCREMENT,"
                     + "email VARCHAR(50) NOT NULL,"
                     + "orderedTime timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,"
                     + "package int NOT NULL,"
@@ -136,7 +136,7 @@ public class MySQLTableCreation {
             statement.executeUpdate(sql);
 
             // Step 4 Insert data into session_status table
-            sql = "INSERT IGNORE INTO session_status (statusId, status) VALUES (1, 'ACTIVE'), (2, 'CLOSED'), (3, 'EXPIRED'), (4, 'REVOKED');";
+            sql = "INSERT IGNORE INTO session_status (statusID, status) VALUES (1, 'ACTIVE'), (2, 'CLOSED'), (3, 'EXPIRED'), (4, 'REVOKED');";
             statement.execute(sql);
 
             // Step 5 Generate fake data
@@ -164,58 +164,32 @@ public class MySQLTableCreation {
             statement.executeUpdate(sql);
 
             // fake order 1
-            sql = "INSERT IGNORE INTO package_info (pkgeSize, pkgWeight, pkgFrom, pkgTo, pkgNotes) "
-                    + "VALUES (5, 150, 'from address 1', 'to address 1', 'it is a gift')";
-            statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
-            ResultSet rs = statement.getGeneratedKeys();
-            rs.next();
-            int packageID = rs.getInt(1);
-            sql = "INSERT IGNORE INTO delivery_info (deliveryType, deliveryStatus, cost) "
-                    + "VALUES ('DRONE', 0, 35.5)";
-            statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
-            rs = statement.getGeneratedKeys();
-            rs.next();
-            int deliveryID = rs.getInt(1);
-            sql = "INSERT IGNORE INTO location_info (currentLat, currentLog, destinationLat, destinationLog) "
-                    + "VALUES (37.715342, -122.463503, 38.931386, -121.038749)";
-            statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
-            rs = statement.getGeneratedKeys();
-            rs.next();
-            int locationID = rs.getInt(1);
-            sql = "INSERT IGNORE INTO orders (email, package, delivery, location) "
-                    + "VALUES ('xuanli@gmail.com', ?, ?, ?)";
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setInt(1, packageID);
-            ps.setInt(2, deliveryID);
-            ps.setInt(3, locationID);
-            ps.execute();
+            sql = "INSERT IGNORE INTO package_info (packageID, pkgeSize, pkgWeight, pkgFrom, pkgTo, pkgNotes) "
+                    + "VALUES (1, 5, 150, 'from address 1', 'to address 1', 'it is a gift')";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO delivery_info (deliveryID, deliveryType, deliveryStatus, cost) "
+                    + "VALUES (1, 'DRONE', 0, 35.5)";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO location_info (locationID, currentLat, currentLog, destinationLat, destinationLog) "
+                    + "VALUES (1, 37.715342, -122.463503, 38.931386, -121.038749)";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO orders (orderID, email, package, delivery, location) "
+                    + "VALUES (1, 'xuanli@gmail.com', 1, 1, 1)";
+            statement.executeUpdate(sql);
 
             // fake order 2
-            sql = "INSERT IGNORE INTO package_info (pkgeSize, pkgWeight, pkgFrom, pkgTo, pkgNotes) "
-                    + "VALUES (21, 320, 'from address 2', 'to address 2', 'happy birthday')";
-            statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
-            rs = statement.getGeneratedKeys();
-            rs.next();
-            packageID = rs.getInt(1);
-            sql = "INSERT IGNORE INTO delivery_info (deliveryType, deliveryStatus, cost) "
-                    + "VALUES ('ROBOT', 1, 79.4)";
-            statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
-            rs = statement.getGeneratedKeys();
-            rs.next();
-            deliveryID = rs.getInt(1);
-            sql = "INSERT IGNORE INTO location_info (currentLat, currentLog, destinationLat, destinationLog) "
-                    + "VALUES (36.807364, -121.983462, 39.075143, -122.673974)";
-            statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
-            rs = statement.getGeneratedKeys();
-            rs.next();
-            locationID = rs.getInt(1);
-            sql = "INSERT IGNORE INTO orders (email, package, delivery, location) "
-                    + "VALUES ('xuanli@gmail.com', ?, ?, ?)";
-            ps = conn.prepareStatement(sql);
-            ps.setInt(1, packageID);
-            ps.setInt(2, deliveryID);
-            ps.setInt(3, locationID);
-            ps.execute();
+            sql = "INSERT IGNORE INTO package_info (packageID, pkgeSize, pkgWeight, pkgFrom, pkgTo, pkgNotes) "
+                    + "VALUES (2, 21, 320, 'from address 2', 'to address 2', 'happy birthday')";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO delivery_info (deliveryID, deliveryType, deliveryStatus, cost) "
+                    + "VALUES (2, 'ROBOT', 1, 79.4)";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO location_info (locationID, currentLat, currentLog, destinationLat, destinationLog) "
+                    + "VALUES (2, 36.807364, -121.983462, 39.075143, -122.673974)";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO orders (orderID, email, package, delivery, location) "
+                    + "VALUES (2, 'xuanli@gmail.com', 2, 2, 2)";
+            statement.executeUpdate(sql);
 
         } catch (Exception e) {
             e.printStackTrace();
