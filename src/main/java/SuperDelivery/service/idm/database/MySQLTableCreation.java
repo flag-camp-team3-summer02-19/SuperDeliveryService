@@ -45,6 +45,12 @@ public class MySQLTableCreation {
 
                 sql = "DROP TABLE IF EXISTS location_info";
                 statement.executeUpdate(sql);
+
+                sql = "DROP TABLE IF EXISTS delivery_type";
+                statement.executeUpdate(sql);
+
+                sql = "DROP TABLE IF EXISTS  delivery_status";
+                statement.executeUpdate(sql);
             }
 
             // Step 3 Create new tables if they do not exist
@@ -91,7 +97,9 @@ public class MySQLTableCreation {
 
             sql = "CREATE TABLE IF NOT EXISTS package_info ("
                     + "packageID int AUTO_INCREMENT,"
-                    + "pkgeSize FLOAT NOT NULL,"
+                    + "pkgLength FLOAT NOT NULL,"
+                    + "pkgWidth FLOAT NOT NULL,"
+                    + "pkgHeight FLOAT NOT NULL,"
                     + "pkgWeight FLOAT NOT NULL,"
                     + "pkgFrom VARCHAR(255) NOT NULL,"
                     + "pkgTo VARCHAR(255) NOT NULL,"
@@ -100,13 +108,29 @@ public class MySQLTableCreation {
                     + ")";
             statement.executeUpdate(sql);
 
+            sql = "CREATE TABLE IF NOT EXISTS delivery_type ("
+                    + "deliveryTypeID int NOT NULL,"
+                    + "deliveryType VARCHAR(20) NOT NULL,"
+                    + "PRIMARY KEY (deliveryTypeID)"
+                    + ")";
+            statement.execute(sql);
+
+            sql = "CREATE TABLE IF NOT EXISTS delivery_status ("
+                    + "deliveryStatusID int NOT NULL,"
+                    + "deliveryStatus VARCHAR(20) NOT NULL,"
+                    + "PRIMARY KEY (deliveryStatusID)"
+                    + ")";
+            statement.execute(sql);
+
             sql = "CREATE TABLE IF NOT EXISTS delivery_info ("
                     + "deliveryID int AUTO_INCREMENT,"
-                    + "deliveryType VARCHAR(255) NOT NULL,"
+                    + "deliveryType int NOT NULL,"
                     + "deliveryTime timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,"
                     + "deliveryStatus int NOT NULL,"
                     + "cost FLOAT NOT NULL,"
-                    + "PRIMARY KEY (deliveryID)"
+                    + "PRIMARY KEY (deliveryID),"
+                    + "FOREIGN KEY (deliveryType) REFERENCES delivery_type (deliveryTypeID) ON UPDATE CASCADE ON DELETE CASCADE,"
+                    + "FOREIGN KEY (deliveryStatus) REFERENCES delivery_status (deliveryStatusID) ON UPDATE CASCADE ON DELETE CASCADE"
                     + ")";
             statement.executeUpdate(sql);
 
@@ -128,15 +152,19 @@ public class MySQLTableCreation {
                     + "delivery int NOT NULL,"
                     + "location int NOT NULL,"
                     + "PRIMARY KEY (orderID),"
-                    + "FOREIGN KEY (email) REFERENCES users(email) ON UPDATE CASCADE ON DELETE CASCADE,"
+                    + "FOREIGN KEY (email) REFERENCES users (email) ON UPDATE CASCADE ON DELETE CASCADE,"
                     + "FOREIGN KEY (package) REFERENCES package_info (packageID) ON UPDATE CASCADE ON DELETE CASCADE,"
                     + "FOREIGN KEY (delivery) REFERENCES delivery_info (deliveryID) ON UPDATE CASCADE ON DELETE CASCADE,"
                     + "FOREIGN KEY (location) REFERENCES location_info (locationID) ON UPDATE CASCADE ON DELETE CASCADE"
                     + ")";
             statement.executeUpdate(sql);
 
-            // Step 4 Insert data into session_status table
-            sql = "INSERT IGNORE INTO session_status (statusID, status) VALUES (1, 'ACTIVE'), (2, 'CLOSED'), (3, 'EXPIRED'), (4, 'REVOKED');";
+            // Step 4 Insert constant data into tables
+            sql = "INSERT IGNORE INTO session_status (statusID, status) VALUES (1, 'ACTIVE'), (2, 'CLOSED'), (3, 'EXPIRED'), (4, 'REVOKED')";
+            statement.execute(sql);
+            sql = "INSERT IGNORE INTO delivery_type (deliveryTypeID, deliveryType) VALUES (3, 'ROBOT'), (4, 'DRONE')";
+            statement.execute(sql);
+            sql = "INSERT IGNORE INTO delivery_status (deliveryStatusID, deliveryStatus) VALUES (0, 'Order Placed'), (1, 'In Progress'), (2, 'Delivered')";
             statement.execute(sql);
 
             // Step 5 Generate fake data
@@ -164,11 +192,11 @@ public class MySQLTableCreation {
             statement.executeUpdate(sql);
 
             // fake order 1
-            sql = "INSERT IGNORE INTO package_info (packageID, pkgeSize, pkgWeight, pkgFrom, pkgTo, pkgNotes) "
-                    + "VALUES (1, 5, 150, 'from address 1', 'to address 1', 'it is a gift')";
+            sql = "INSERT IGNORE INTO package_info (packageID, pkgLength, pkgWidth, pkgHeight, pkgWeight, pkgFrom, pkgTo, pkgNotes) "
+                    + "VALUES (1, 5.1, 6.2, 7.3, 150.5, 'from address 1', 'to address 1', 'it is a gift')";
             statement.executeUpdate(sql);
             sql = "INSERT IGNORE INTO delivery_info (deliveryID, deliveryType, deliveryStatus, cost) "
-                    + "VALUES (1, 'DRONE', 0, 35.5)";
+                    + "VALUES (1, 3, 0, 35.5)";
             statement.executeUpdate(sql);
             sql = "INSERT IGNORE INTO location_info (locationID, currentLat, currentLon, destinationLat, destinationLon) "
                     + "VALUES (1, 37.715342, -122.463503, 38.931386, -121.038749)";
@@ -178,11 +206,11 @@ public class MySQLTableCreation {
             statement.executeUpdate(sql);
 
             // fake order 2
-            sql = "INSERT IGNORE INTO package_info (packageID, pkgeSize, pkgWeight, pkgFrom, pkgTo, pkgNotes) "
-                    + "VALUES (2, 21, 320, 'from address 2', 'to address 2', 'happy birthday')";
+            sql = "INSERT IGNORE INTO package_info (packageID, pkgLength, pkgWidth, pkgHeight, pkgWeight, pkgFrom, pkgTo, pkgNotes) "
+                    + "VALUES (2, 21.4, 28.9, 12.7, 320.5, 'from address 2', 'to address 2', 'happy birthday')";
             statement.executeUpdate(sql);
             sql = "INSERT IGNORE INTO delivery_info (deliveryID, deliveryType, deliveryStatus, cost) "
-                    + "VALUES (2, 'ROBOT', 1, 79.4)";
+                    + "VALUES (2, 4, 1, 79.4)";
             statement.executeUpdate(sql);
             sql = "INSERT IGNORE INTO location_info (locationID, currentLat, currentLon, destinationLat, destinationLon) "
                     + "VALUES (2, 36.807364, -121.983462, 39.075143, -122.673974)";

@@ -17,7 +17,7 @@ public class OrderSummary {
     @JsonProperty(value = "notes")
     private String pkgNotes;
     @JsonProperty(value = "deliveryType")
-    private String deliveryType;
+    private int deliveryType;
     @JsonProperty(value = "deliveryStatus")
     private int deliveryStatus;
     @JsonProperty(value = "orderedTime")
@@ -52,7 +52,7 @@ public class OrderSummary {
         return pkgNotes;
     }
 
-    public String getDeliveryType() {
+    public int getDeliveryType() {
         return deliveryType;
     }
 
@@ -73,7 +73,7 @@ public class OrderSummary {
         private String pkgFrom;
         private String pkgTo;
         private String pkgNotes;
-        private String deliveryType;
+        private int deliveryType;
         private int deliveryStatus;
         private Timestamp orderedTime;
         private Map<String, Float> currentLocLatLon;
@@ -98,7 +98,7 @@ public class OrderSummary {
             return this;
         }
 
-        public OrderSummaryBuilder setDeliveryType(String deliveryType) {
+        public OrderSummaryBuilder setDeliveryType(int deliveryType) {
             this.deliveryType = deliveryType;
             return this;
         }

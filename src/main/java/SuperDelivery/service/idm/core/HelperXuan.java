@@ -126,7 +126,7 @@ public class HelperXuan {
                     ps.setInt(1, deliveryID);
                     rs = ps.executeQuery();
                     while (rs.next()) {
-                        builder.setDeliveryType(rs.getString("deliveryType"));
+                        builder.setDeliveryType(rs.getInt("deliveryType"));
                         builder.setDeliveryStatus(rs.getInt("deliveryStatus"));
                     }
 
