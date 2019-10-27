@@ -113,9 +113,9 @@ public class MySQLTableCreation {
             sql = "CREATE TABLE IF NOT EXISTS location_info ("
                     + "locationID int AUTO_INCREMENT,"
                     + "currentLat FLOAT NOT NULL,"
-                    + "currentLog FLOAT NOT NULL,"
+                    + "currentLon FLOAT NOT NULL,"
                     + "destinationLat FLOAT NOT NULL,"
-                    + "destinationLog FLOAT NOT NULL,"
+                    + "destinationLon FLOAT NOT NULL,"
                     + "PRIMARY KEY (locationID)"
                     + ")";
             statement.executeUpdate(sql);
@@ -170,7 +170,7 @@ public class MySQLTableCreation {
             sql = "INSERT IGNORE INTO delivery_info (deliveryID, deliveryType, deliveryStatus, cost) "
                     + "VALUES (1, 'DRONE', 0, 35.5)";
             statement.executeUpdate(sql);
-            sql = "INSERT IGNORE INTO location_info (locationID, currentLat, currentLog, destinationLat, destinationLog) "
+            sql = "INSERT IGNORE INTO location_info (locationID, currentLat, currentLon, destinationLat, destinationLon) "
                     + "VALUES (1, 37.715342, -122.463503, 38.931386, -121.038749)";
             statement.executeUpdate(sql);
             sql = "INSERT IGNORE INTO orders (orderID, email, package, delivery, location) "
@@ -184,7 +184,7 @@ public class MySQLTableCreation {
             sql = "INSERT IGNORE INTO delivery_info (deliveryID, deliveryType, deliveryStatus, cost) "
                     + "VALUES (2, 'ROBOT', 1, 79.4)";
             statement.executeUpdate(sql);
-            sql = "INSERT IGNORE INTO location_info (locationID, currentLat, currentLog, destinationLat, destinationLog) "
+            sql = "INSERT IGNORE INTO location_info (locationID, currentLat, currentLon, destinationLat, destinationLon) "
                     + "VALUES (2, 36.807364, -121.983462, 39.075143, -122.673974)";
             statement.executeUpdate(sql);
             sql = "INSERT IGNORE INTO orders (orderID, email, package, delivery, location) "

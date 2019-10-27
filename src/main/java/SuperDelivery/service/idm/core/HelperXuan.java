@@ -2,14 +2,18 @@ package SuperDelivery.service.idm.core;
 
 import SuperDelivery.service.idm.IDMService;
 import SuperDelivery.service.idm.logger.ServiceLogger;
-import SuperDelivery.service.idm.models.SessionRequestModel;
+import SuperDelivery.service.idm.models.OrderSummary;
+import SuperDelivery.service.idm.models.OrderSummary.OrderSummaryBuilder;
 import SuperDelivery.service.idm.security.Session;
 import SuperDelivery.service.idm.security.Token;
-import com.mysql.cj.PreparedQuery;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class HelperXuan {
     public static boolean isSessionValid(String sessionID) {
@@ -68,4 +72,119 @@ public class HelperXuan {
         }
         return false;
     }
+
+    public static Set<OrderSummary> getOrderList(String sessionID) {
+        Set<OrderSummary> orders = new HashSet<>();
+
+        try {
+            // Construct the query
+            String query = "SELECT email FROM sessions WHERE sessionID=?";
+            // Create the prepared statement
+            PreparedStatement ps = IDMService.getCon().prepareStatement(query);
+            // Set the parameters
+            ps.setString(1,sessionID);
+            // Execute query
+            ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
+            ResultSet rs = ps.executeQuery();
+            rs.next();
+            String email = rs.getString("email");
+            ServiceLogger.LOGGER.info("Query succeeded, user email: " + email);
+            // Get orderIDs for current user
+            Set<Integer> orderIDs = getOrderIDs(email);
+            for (int orderID : orderIDs) {
+                OrderSummaryBuilder builder = new OrderSummaryBuilder();
+                builder.setOrderID(orderID);
+
+                ServiceLogger.LOGGER.info("Trying to retrieve order " + orderID);
+
+                // Get orderedTime, packageID, deliveryID, and locationID
+                query = "SELECT orderedTime, package, delivery, location FROM orders WHERE orderID = ?";
+                ps = IDMService.getCon().prepareStatement(query);
+                ps.setInt(1, orderID);
+                rs = ps.executeQuery();
+
+                while (rs.next()) {
+                    builder.setOrderedTime(rs.getTimestamp("orderedTime"));
+                    int packageID = rs.getInt("package");
+                    int deliveryID = rs.getInt("delivery");
+                    int locationID = rs.getInt("location");
+
+                    // Get package from, to, and notes
+                    query = "SELECT pkgFrom, pkgTo, pkgNotes FROM package_info WHERE packageID = ?";
+                    ps = IDMService.getCon().prepareStatement(query);
+                    ps.setInt(1, packageID);
+                    rs = ps.executeQuery();
+                    while (rs.next()) {
+                        builder.setPkgFrom(rs.getString("pkgFrom"));
+                        builder.setPkgTo(rs.getString("pkgTo"));
+                        builder.setPkgNotes(rs.getString("pkgNotes"));
+                    }
+
+                    // Get delivery type and status
+                    query = "SELECT deliveryType, deliveryStatus FROM delivery_info WHERE deliveryID = ?";
+                    ps = IDMService.getCon().prepareStatement(query);
+                    ps.setInt(1, deliveryID);
+                    rs = ps.executeQuery();
+                    while (rs.next()) {
+                        builder.setDeliveryType(rs.getString("deliveryType"));
+                        builder.setDeliveryStatus(rs.getInt("deliveryStatus"));
+                    }
+
+                    // Get current location's lat and lon
+                    // TODO: implement updateLocation() function to update package's current lat and lon location
+                    //       and save them to location_info table; meanwhile, this function can also change deliveryStatus
+                    //       in delivery_info table if package is delivered.
+                    //       If need to provide notification to users, this function need to be run continuously at backend.
+                    updateLocation();
+                    query = "SELECT currentLat, currentLon FROM location_info WHERE locationID = ?";
+                    ps = IDMService.getCon().prepareStatement(query);
+                    ps.setInt(1, locationID);
+                    rs = ps.executeQuery();
+                    while (rs.next()) {
+                        Map<String, Float> currentLocLatLon = new HashMap<>();
+                        currentLocLatLon.put("lat", rs.getFloat("currentLat"));
+                        currentLocLatLon.put("lon", rs.getFloat("currentLon"));
+                        builder.setCurrentLocLatLon(currentLocLatLon);
+                    }
+                }
+                orders.add(builder.build());
+                ServiceLogger.LOGGER.info("Query succeeded.");
+            }
+        } catch (SQLException e) {
+            ServiceLogger.LOGGER.warning("Error during query.");
+            e.printStackTrace();
+        }
+
+        return orders;
+    }
+
+    private static Set<Integer> getOrderIDs(String email) {
+        Set<Integer> orderIDs = new HashSet<>();
+
+        try {
+            String query = "SELECT orderID FROM orders WHERE email=?";
+            PreparedStatement ps = IDMService.getCon().prepareStatement(query);
+            ps.setString(1, email);
+            ServiceLogger.LOGGER.info("Trying to retrieve orderIDs.");
+            ResultSet rs = ps.executeQuery();
+            ServiceLogger.LOGGER.info("Query succeeded.");
+            while (rs.next()) {
+                orderIDs.add(rs.getInt("orderID"));
+            }
+        } catch (SQLException e) {
+            ServiceLogger.LOGGER.warning("Error during query.");
+            e.printStackTrace();
+        }
+
+        return orderIDs;
+    }
+
+    // TODO: implement updateLocation() function to update package's current lat and lon location
+    //       and save them to location_info table; meanwhile, this function can also change deliveryStatus
+    //       in delivery_info table if package is delivered.
+    //       If need to provide notification to users, this function need to be run continuously at backend.
+    public static void updateLocation() {
+
+    }
+
 }
