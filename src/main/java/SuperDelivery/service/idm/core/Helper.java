@@ -186,9 +186,10 @@ public class Helper {
             if (rs.next()) {
                 String sessionID = rs.getString(1);
                 ServiceLogger.LOGGER.info("This session exists.");
-                String query2 = "UPDATE sessions SET status=4 WHERE sessionID=?;";
+                String query2 = "UPDATE sessions SET status=? WHERE sessionID=?;";
                 PreparedStatement ps2 = IDMService.getCon().prepareStatement(query2);
-                ps2.setString(1,sessionID);
+                ps2.setInt(1, Session.REVOKED);
+                ps2.setString(2,sessionID);
                 ps2.execute();
             } else {
                 ServiceLogger.LOGGER.info("This session does not exist.");
