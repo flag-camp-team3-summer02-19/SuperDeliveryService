@@ -39,9 +39,7 @@ public class Register {
                 responseModel.setMessage("Email already in use.");
                 Arrays.fill(password,'0');
                 return Response.status(Response.Status.OK).entity(responseModel).build();
-            }
-
-            else{
+            } else {
                 if(insertUserToDb(requestModel)){
                     responseModel.setResultCode(110);                            //case 110
                     responseModel.setMessage("User registered successfully.");

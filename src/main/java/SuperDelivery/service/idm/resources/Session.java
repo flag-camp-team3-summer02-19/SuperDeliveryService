@@ -60,8 +60,8 @@ public class Session {
                 System.err.println("IOException happened.");
                 responseModel.setResultCode(-1);
                 responseModel.setMessage("Internal Server Error.");
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(responseModel).build();
             }
         }
-        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(responseModel).build();
     }
 }

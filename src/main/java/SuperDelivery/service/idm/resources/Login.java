@@ -17,7 +17,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.Arrays;
 
 import static SuperDelivery.service.idm.core.Helper.*;
 
@@ -93,6 +92,5 @@ public class Login {
         lrm.setResultCode(-1);                                //case -1
         lrm.setMessage("Internal Server Error");
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(lrm).build();
-
     }
 }
