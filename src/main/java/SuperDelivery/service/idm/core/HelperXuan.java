@@ -145,10 +145,10 @@ public class HelperXuan {
                     ps.setInt(1, locationID);
                     rs = ps.executeQuery();
                     while (rs.next()) {
-                        Map<String, Float> currentLocLatLon = new HashMap<>();
-                        currentLocLatLon.put("lat", rs.getFloat("currentLat"));
-                        currentLocLatLon.put("lon", rs.getFloat("currentLon"));
-                        builder.setCurrentLocLatLon(currentLocLatLon);
+                        LocationLatLonBuilder latLonBuilder = new LocationLatLonBuilder();
+                        latLonBuilder.setLat(rs.getFloat("currentLat"));
+                        latLonBuilder.setLon(rs.getFloat("currentLon"));
+                        builder.setCurrentLocLatLon(latLonBuilder.build());
                     }
                 }
                 orders.add(builder.build());

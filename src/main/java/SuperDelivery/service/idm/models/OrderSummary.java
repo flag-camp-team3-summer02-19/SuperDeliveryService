@@ -23,7 +23,7 @@ public class OrderSummary {
     @JsonProperty(value = "orderedTime")
     private Timestamp orderedTime;
     @JsonProperty(value = "currentLocLatLon")
-    private Map<String, Float> currentLocLatLon;
+    private LocationLatLon currentLocLatLon;
 
     private OrderSummary(OrderSummaryBuilder builder) {
         this.orderID = builder.orderID;
@@ -64,7 +64,7 @@ public class OrderSummary {
         return orderedTime;
     }
 
-    public Map<String, Float> getCurrentLocLatLon() {
+    public LocationLatLon getCurrentLocLatLon() {
         return currentLocLatLon;
     }
 
@@ -76,7 +76,7 @@ public class OrderSummary {
         private int deliveryType;
         private int deliveryStatus;
         private Timestamp orderedTime;
-        private Map<String, Float> currentLocLatLon;
+        private LocationLatLon currentLocLatLon;
 
         public OrderSummaryBuilder setOrderID(int orderID) {
             this.orderID = orderID;
@@ -113,7 +113,7 @@ public class OrderSummary {
             return this;
         }
 
-        public OrderSummaryBuilder setCurrentLocLatLon(Map<String, Float> currentLocLatLon) {
+        public OrderSummaryBuilder setCurrentLocLatLon(LocationLatLon currentLocLatLon) {
             this.currentLocLatLon = currentLocLatLon;
             return this;
         }
