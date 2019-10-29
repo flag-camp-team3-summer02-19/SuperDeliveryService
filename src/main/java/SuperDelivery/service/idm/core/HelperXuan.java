@@ -2,8 +2,12 @@ package SuperDelivery.service.idm.core;
 
 import SuperDelivery.service.idm.IDMService;
 import SuperDelivery.service.idm.logger.ServiceLogger;
-import SuperDelivery.service.idm.models.OrderSummary;
+import SuperDelivery.service.idm.models.*;
+import SuperDelivery.service.idm.models.DeliveryInfo.DeliveryInfoBuilder;
 import SuperDelivery.service.idm.models.OrderSummary.OrderSummaryBuilder;
+import SuperDelivery.service.idm.models.PackageInfo.PackageInfoBuilder;
+import SuperDelivery.service.idm.models.LocationInfo.LocationInfoBuilder;
+import SuperDelivery.service.idm.models.LocationLatLon.LocationLatLonBuilder;
 import SuperDelivery.service.idm.security.Session;
 import SuperDelivery.service.idm.security.Token;
 
@@ -154,7 +158,6 @@ public class HelperXuan {
             ServiceLogger.LOGGER.warning("Error during query.");
             e.printStackTrace();
         }
-
         return orders;
     }
 
@@ -175,7 +178,6 @@ public class HelperXuan {
             ServiceLogger.LOGGER.warning("Error during query.");
             e.printStackTrace();
         }
-
         return orderIDs;
     }
 
@@ -185,6 +187,110 @@ public class HelperXuan {
     //       If need to provide notification to users, this function need to be run continuously at backend.
     public static void updateLocation() {
 
+    }
+
+    public static void getOrderDetail(OrderDetailResponseModel orderDetail, int orderID) {
+        try {
+            String query = "SELECT package, delivery, location FROM orders WHERE orderID = ?";
+            PreparedStatement ps = IDMService.getCon().prepareStatement(query);
+            ps.setInt(1, orderID);
+            ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
+            ResultSet rs = ps.executeQuery();
+            ServiceLogger.LOGGER.info("Query succeeded.");
+            if (!rs.next()) {
+                orderDetail.setStatus("FAIL");
+                return;
+            }
+            int packageID = rs.getInt("package");
+            int deliveryID = rs.getInt("delivery");
+            int locationID = rs.getInt("location");
+            orderDetail.setPackageInfo(getPackageInfo(packageID));
+            orderDetail.setDeliveryInfo(getDeliveryInfo(deliveryID));
+            orderDetail.setLocationInfo(getLocationInfo(locationID));
+        } catch (SQLException e) {
+            ServiceLogger.LOGGER.warning("Error during query.");
+            e.printStackTrace();
+        }
+    }
+
+    private static PackageInfo getPackageInfo(int packageID) {
+        PackageInfoBuilder builder = new PackageInfoBuilder();
+
+        try {
+            String query = "SELECT * FROM package_info WHERE packageID = ?";
+            PreparedStatement ps = IDMService.getCon().prepareStatement(query);
+            ps.setInt(1, packageID);
+            ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
+            ResultSet rs = ps.executeQuery();
+            ServiceLogger.LOGGER.info("Query succeeded.");
+            while (rs.next()) {
+                builder.setPkgLength(rs.getFloat("pkgLength"));
+                builder.setPkgWidth(rs.getFloat("pkgWidth"));
+                builder.setPkgHeight(rs.getFloat("pkgHeight"));
+                builder.setPkgWeight(rs.getFloat("pkgWeight"));
+                builder.setPkgFrom(rs.getString("pkgFrom"));
+                builder.setPkgTo(rs.getString("pkgTo"));
+                builder.setPkgNotes(rs.getString("pkgNotes"));
+            }
+        } catch (SQLException e) {
+            ServiceLogger.LOGGER.warning("Error during query.");
+            e.printStackTrace();
+        }
+        return builder.build();
+    }
+
+    private static DeliveryInfo getDeliveryInfo (int deliveryID) {
+        DeliveryInfoBuilder builder = new DeliveryInfoBuilder();
+
+        try {
+            String query = "SELECT * FROM delivery_info WHERE deliveryID = ?";
+            PreparedStatement ps = IDMService.getCon().prepareStatement(query);
+            ps.setInt(1, deliveryID);
+            ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
+            ResultSet rs = ps.executeQuery();
+            ServiceLogger.LOGGER.info("Query succeeded.");
+            while (rs.next()) {
+                builder.setDeliveryType(rs.getInt("deliveryType"));
+                builder.setDeliveryTime(rs.getTimestamp("deliveryTime"));
+                builder.setDeliveryStatus(rs.getInt("deliveryStatus"));
+                builder.setCost(rs.getFloat("cost"));
+            }
+        } catch (SQLException e) {
+            ServiceLogger.LOGGER.warning("Error during query.");
+            e.printStackTrace();
+        }
+        return builder.build();
+    }
+
+    private static LocationInfo getLocationInfo (int locationID) {
+        LocationInfoBuilder builder = new LocationInfoBuilder();
+        LocationLatLonBuilder latLonBuilder = new LocationLatLonBuilder();
+
+        // update current location
+        updateLocation();
+
+        try {
+            String query = "SELECT * FROM location_info WHERE locationID = ?";
+            PreparedStatement ps = IDMService.getCon().prepareStatement(query);
+            ps.setInt(1, locationID);
+            ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
+            ResultSet rs = ps.executeQuery();
+            ServiceLogger.LOGGER.info("Query succeeded.");
+            while (rs.next()) {
+                // set current location
+                latLonBuilder.setLat(rs.getFloat("currentLat"));
+                latLonBuilder.setLon(rs.getFloat("currentLon"));
+                builder.setCurrent(latLonBuilder.build());
+                // set destination location
+                latLonBuilder.setLat(rs.getFloat("destinationLat"));
+                latLonBuilder.setLon(rs.getFloat("destinationLon"));
+                builder.setDestination(latLonBuilder.build());
+            }
+        } catch (SQLException e) {
+            ServiceLogger.LOGGER.warning("Error during query.");
+            e.printStackTrace();
+        }
+        return builder.build();
     }
 
 }
