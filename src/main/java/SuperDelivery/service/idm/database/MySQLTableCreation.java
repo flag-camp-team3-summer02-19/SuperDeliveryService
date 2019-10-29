@@ -136,10 +136,10 @@ public class MySQLTableCreation {
 
             sql = "CREATE TABLE IF NOT EXISTS location_info ("
                     + "locationID int AUTO_INCREMENT,"
-                    + "currentLat FLOAT NOT NULL,"
-                    + "currentLon FLOAT NOT NULL,"
-                    + "destinationLat FLOAT NOT NULL,"
-                    + "destinationLon FLOAT NOT NULL,"
+                    + "currentLat DECIMAL(9,6) NOT NULL,"
+                    + "currentLon DECIMAL(9,6) NOT NULL,"
+                    + "destinationLat DECIMAL(9,6) NOT NULL,"
+                    + "destinationLon DECIMAL(9,6) NOT NULL,"
                     + "PRIMARY KEY (locationID)"
                     + ")";
             statement.executeUpdate(sql);

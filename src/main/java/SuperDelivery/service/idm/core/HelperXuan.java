@@ -146,8 +146,8 @@ public class HelperXuan {
                     rs = ps.executeQuery();
                     while (rs.next()) {
                         LocationLatLonBuilder latLonBuilder = new LocationLatLonBuilder();
-                        latLonBuilder.setLat(rs.getFloat("currentLat"));
-                        latLonBuilder.setLon(rs.getFloat("currentLon"));
+                        latLonBuilder.setLat(rs.getBigDecimal("currentLat"));
+                        latLonBuilder.setLon(rs.getBigDecimal("currentLon"));
                         builder.setCurrentLocLatLon(latLonBuilder.build());
                     }
                 }
@@ -278,12 +278,12 @@ public class HelperXuan {
             ServiceLogger.LOGGER.info("Query succeeded.");
             while (rs.next()) {
                 // set current location
-                latLonBuilder.setLat(rs.getFloat("currentLat"));
-                latLonBuilder.setLon(rs.getFloat("currentLon"));
+                latLonBuilder.setLat(rs.getBigDecimal("currentLat"));
+                latLonBuilder.setLon(rs.getBigDecimal("currentLon"));
                 builder.setCurrent(latLonBuilder.build());
                 // set destination location
-                latLonBuilder.setLat(rs.getFloat("destinationLat"));
-                latLonBuilder.setLon(rs.getFloat("destinationLon"));
+                latLonBuilder.setLat(rs.getBigDecimal("destinationLat"));
+                latLonBuilder.setLon(rs.getBigDecimal("destinationLon"));
                 builder.setDestination(latLonBuilder.build());
             }
         } catch (SQLException e) {
