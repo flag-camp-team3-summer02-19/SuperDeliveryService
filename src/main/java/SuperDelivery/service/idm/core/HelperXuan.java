@@ -293,4 +293,19 @@ public class HelperXuan {
         return builder.build();
     }
 
+    public static void logoutUser(String sessionID) {
+        try {
+            String query = "UPDATE sessions SET status = ? WHERE sessionID = ?";
+            PreparedStatement ps = IDMService.getCon().prepareStatement(query);
+            ps.setInt(1, Session.CLOSED);
+            ps.setString(2, sessionID);
+            ServiceLogger.LOGGER.info("Trying update: " + ps.toString());
+            ps.execute();
+            ServiceLogger.LOGGER.info("Session updates successfully.");
+        } catch (SQLException e) {
+            ServiceLogger.LOGGER.warning("Error during query.");
+            e.printStackTrace();
+        }
+    }
+
 }
