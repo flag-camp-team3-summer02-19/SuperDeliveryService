@@ -1,7 +1,6 @@
 package SuperDelivery.service.idm.database;
 
 import SuperDelivery.service.idm.IDMService;
-import SuperDelivery.service.idm.configs.ServiceConfigs;
 import SuperDelivery.service.idm.logger.ServiceLogger;
 
 import java.sql.*;
@@ -31,6 +30,9 @@ public class MySQLTableCreation {
                 sql = "DROP TABLE IF EXISTS session_status";
                 statement.executeUpdate(sql);
 
+                sql = "DROP TABLE IF EXISTS  workers";
+                statement.executeUpdate(sql);
+
                 sql = "DROP TABLE IF EXISTS orders";
                 statement.executeUpdate(sql);
 
@@ -50,6 +52,9 @@ public class MySQLTableCreation {
                 statement.executeUpdate(sql);
 
                 sql = "DROP TABLE IF EXISTS  delivery_status";
+                statement.executeUpdate(sql);
+
+                sql = "DROP TABLE IF EXISTS  warehouse_info";
                 statement.executeUpdate(sql);
             }
 
@@ -159,6 +164,25 @@ public class MySQLTableCreation {
                     + ")";
             statement.executeUpdate(sql);
 
+            sql = "CREATE TABLE IF NOT EXISTS warehouse_info ("
+                    + "warehouseID ENUM('1', '2', '3') NOT NULL,"
+                    + "lat DECIMAL(9,6) NOT NULL,"
+                    + "lon DECIMAL(9,6) NOT NULL,"
+                    + "PRIMARY KEY (warehouseID)"
+                    + ")";
+            statement.executeUpdate(sql);
+
+            sql = "CREATE TABLE IF NOT EXISTS workers ("
+                    + "workerID int AUTO_INCREMENT,"
+                    + "workerType ENUM('ROBOT', 'DRONE') NOT NULL,"
+                    + "warehouse ENUM('1', '2', '3') NOT NULL,"
+                    + "task int,"
+                    + "PRIMARY KEY (workerID),"
+                    + "FOREIGN KEY (task) REFERENCES orders (orderID),"
+                    + "FOREIGN KEY (warehouse) REFERENCES warehouse_info(warehouseID)"
+                    + ")";
+            statement.executeUpdate(sql);
+
             // Step 4 Insert constant data into tables
             sql = "INSERT IGNORE INTO session_status (statusID, status) VALUES (1, 'ACTIVE'), (2, 'CLOSED'), (3, 'EXPIRED'), (4, 'REVOKED')";
             statement.execute(sql);
@@ -166,6 +190,31 @@ public class MySQLTableCreation {
             statement.execute(sql);
             sql = "INSERT IGNORE INTO delivery_status (deliveryStatusID, deliveryStatus) VALUES (0, 'Order Placed'), (1, 'In Progress'), (2, 'Delivered')";
             statement.execute(sql);
+            sql = "INSERT IGNORE INTO warehouse_info (warehouseID, lat, lon) VALUES "
+                    + "('1', 37.766345, -122.512029),"
+                    + "('2', 37.797750, -122.408731),"
+                    + "('3', 37.711729, -122.427705)";
+            statement.executeUpdate(sql);
+            // 3 warehouses, each with 50 robots and 50 drones
+            sql = "INSERT IGNORE INTO workers (workerID, workerType, warehouse) VALUES (?, ?, ?)";
+            PreparedStatement ps = IDMService.getCon().prepareStatement(sql);
+            int workerID = 1;
+            for (int wh = 1; wh <= 3; wh++) {
+                for (int i = 0; i < 50; i++) {
+                    ps.setInt(1, workerID);
+                    ps.setString(2, "ROBOT");
+                    ps.setString(3, String.valueOf(wh));
+                    ps.execute();
+                    workerID++;
+                }
+                for (int i = 0; i < 50; i++) {
+                    ps.setInt(1, workerID);
+                    ps.setString(2, "DRONE");
+                    ps.setString(3, String.valueOf(wh));
+                    ps.execute();
+                    workerID++;
+                }
+            }
 
             // Step 5 Generate fake data
             if (fakeData) {
