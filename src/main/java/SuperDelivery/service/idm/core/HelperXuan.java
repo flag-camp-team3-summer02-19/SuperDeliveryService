@@ -314,7 +314,18 @@ public class HelperXuan {
         }
     }
 
-
+    public static Warehouse findNearestWarehouse(LocationLatLon loc, WorkerType workertype) {
+        double minDistance = Double.MAX_VALUE;
+        Warehouse nearestWarehouse = null;
+        for (Warehouse warehouse : Warehouse.values()) {
+            double dist = computeDistanceBetween(loc, warehouse.getLocation(), workertype.isGeodesic());
+            if (dist < minDistance) {
+                minDistance = dist;
+                nearestWarehouse = warehouse;
+            }
+        }
+        return nearestWarehouse;
+    }
 
     private static double computeDistanceBetween(LocationLatLon org, LocationLatLon dst, boolean geodesic) {
         if (geodesic) {
@@ -335,9 +346,9 @@ public class HelperXuan {
             } catch (Exception e) {
                 ServiceLogger.LOGGER.warning("Google map Distance Matrix API cannot compute distance.");
                 e.printStackTrace();
+                return -1;
             }
         }
-        return -1;
     }
 
     private static LocationLatLon getLatLon(String address) {
