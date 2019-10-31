@@ -10,10 +10,16 @@ import SuperDelivery.service.idm.models.LocationInfo.LocationInfoBuilder;
 import SuperDelivery.service.idm.models.LocationLatLon.LocationLatLonBuilder;
 import SuperDelivery.service.idm.security.Session;
 import SuperDelivery.service.idm.security.Token;
+import com.google.maps.DistanceMatrixApi;
+import com.google.maps.GeoApiContext;
+import com.google.maps.GeocodingApi;
+import com.google.maps.model.*;
 
+import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -306,6 +312,69 @@ public class HelperXuan {
             ServiceLogger.LOGGER.warning("Error during query.");
             e.printStackTrace();
         }
+    }
+
+
+
+    private static double computeDistanceBetween(LocationLatLon org, LocationLatLon dst, boolean geodesic) {
+        if (geodesic) {
+            // Compute the the shortest path (geodesic) between two points (unit: meter).
+            return geodesicDistance(org, dst);
+        } else {
+            // Compute the the real walking path between two points (unit: meter).
+            GeoApiContext context = IDMService.getGeoApiContext();
+            LatLng orgLatLon = new LatLng(org.getLat().doubleValue(), org.getLon().doubleValue());
+            LatLng dstLatLon = new LatLng(dst.getLat().doubleValue(), dst.getLon().doubleValue());
+            try {
+                DistanceMatrix result = DistanceMatrixApi.newRequest(context)
+                        .origins(orgLatLon)
+                        .destinations(dstLatLon)
+                        .mode(TravelMode.WALKING)
+                        .await();
+                return result.rows[0].elements[0].distance.inMeters;
+            } catch (Exception e) {
+                ServiceLogger.LOGGER.warning("Google map Distance Matrix API cannot compute distance.");
+                e.printStackTrace();
+            }
+        }
+        return -1;
+    }
+
+    private static LocationLatLon getLatLon(String address) {
+        GeoApiContext context = IDMService.getGeoApiContext();
+        LocationLatLonBuilder builder = new LocationLatLonBuilder();
+
+        // Get latitude and longitude from input address
+        try {
+            GeocodingResult[] result = GeocodingApi.newRequest(context)
+                    .address(address)
+                    .language("en")
+                    .region("us")
+                    .await();
+            builder.setLat(BigDecimal.valueOf(result[0].geometry.location.lat));
+            builder.setLon(BigDecimal.valueOf(result[0].geometry.location.lng));
+        } catch (Exception e) {
+            ServiceLogger.LOGGER.warning("Google map API cannot interpret address: " + address);
+            e.printStackTrace();
+        }
+        return builder.build();
+    }
+
+    private static double geodesicDistance(LocationLatLon p1, LocationLatLon p2) {
+        double lat1 = Math.toRadians(p1.getLat().doubleValue());
+        double lon1 = Math.toRadians(p1.getLon().doubleValue());
+        double lat2 = Math.toRadians(p2.getLat().doubleValue());
+        double lon2 = Math.toRadians(p2.getLon().doubleValue());
+
+        // Haversine formula
+        double dlon = lon2 - lon1;
+        double dlat = lat2 - lat1;
+        double a = Math.pow(Math.sin(dlat / 2), 2) + Math.cos(lat1) * Math.cos(lat2) * Math.pow(Math.sin(dlon / 2), 2);
+        double c = 2 * Math.asin(Math.sqrt(a));
+
+        // Radius of earth in meters, used in JavaScript Geometry API
+        double r = 6378137;
+        return (c * r);
     }
 
 }
