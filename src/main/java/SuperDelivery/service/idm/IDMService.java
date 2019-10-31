@@ -6,6 +6,7 @@ import SuperDelivery.service.idm.security.Session;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import SuperDelivery.service.idm.logger.ServiceLogger;
+import com.google.maps.GeoApiContext;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.internal.util.ExceptionUtils;
@@ -31,10 +32,16 @@ public class IDMService {
 
     private static Connection con = null;
 
+    private static GeoApiContext context = null;
+
     public static void main(String[] args) {
         service = new IDMService();
         service.initService(args);
         CreateTable(false, true);
+        setGeoApiContext();
+
+        // TODO: DELETE IT AFTER TEST
+        Test.test();
     }
 
     private void initService(String[] args) {
@@ -203,8 +210,17 @@ public class IDMService {
         System.exit(-1);
     }
 
+    private static void setGeoApiContext() {
+        context = new GeoApiContext.Builder()
+                .apiKey("AIzaSyBk5M1filb7rOH7NhFbbrj4lq9tuLbGa98")
+                .build();
+    }
+
     public static Connection getCon() {
         return con;
     }
 
+    public static GeoApiContext getGeoApiContext() {
+        return context;
+    }
 }
