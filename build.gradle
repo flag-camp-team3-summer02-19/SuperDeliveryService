@@ -47,6 +47,9 @@ dependencies {
     compile group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.1.1'
     compile group: 'commons-codec', name: 'commons-codec', version: '1.12'
     compile group: 'mysql', name: 'mysql-connector-java', version: '8.0.15'
+
+    implementation 'com.google.maps:google-maps-services:0.10.1'
+    implementation 'org.slf4j:slf4j-simple:1.7.25'
 }
 
 // Define the main class for the application
