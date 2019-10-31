@@ -314,7 +314,63 @@ public class HelperXuan {
         }
     }
 
-    public static Warehouse findNearestWarehouse(LocationLatLon loc, WorkerType workertype) {
+//    public static Methods getDeliveryMethods(PackageInfo pkgInfo) {
+//        try {
+//            // Get lat and lon for origin and destination address;
+//            LocationLatLon orgLatLon = getLatLon(pkgInfo.getPkgFrom());
+//            LocationLatLon dstLatLon = getLatLon(pkgInfo.getPkgTo());
+//
+//
+//        } catch () {
+//
+//        }
+//
+//    }
+
+//    private static DeliveryInfo getFastestDelivery(LocationLatLon orgLatLon, LocationLatLon dstLatLon) {
+//        DeliveryInfo fastestDelivery = null;
+//        Warehouse warehouse = findNearestWarehouse(orgLatLon, WorkerType.DRONE);
+//        if (isWorkerAvailable(warehouse, WorkerType.DRONE)) {
+//
+//        }
+//
+//
+//
+//
+//
+//    }
+
+    public static boolean isWorkerAvailable(Warehouse warehouse, WorkerType workerType) {
+        return getAvailableWorker(warehouse, workerType) != -1;
+    }
+
+    private static int getAvailableWorker(Warehouse warehouse, WorkerType workerType) {
+        try {
+            String query = "SELECT workerID FROM workers wk WHERE warehouse = ? AND workerType = ? AND "
+                    + "wk.availableTime <= NOW()";
+            PreparedStatement ps = IDMService.getCon().prepareStatement(query);
+            ps.setString(1, warehouse.getDbName());
+            ps.setString(2, workerType.getDbName());
+            ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
+            ResultSet rs = ps.executeQuery();
+            ServiceLogger.LOGGER.info("Query succeeded.");
+            if(rs.next()){
+                ServiceLogger.LOGGER.info("There is available " + workerType.getDbName()
+                        + " in warehouse " + warehouse.getDbName());
+                return rs.getInt("workerID");
+            } else {
+                ServiceLogger.LOGGER.info("There is no available " + workerType.getDbName()
+                        + " in warehouse " + warehouse.getDbName());
+                return -1;
+            }
+        } catch (SQLException e) {
+            ServiceLogger.LOGGER.warning("Error during query.");
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    private static Warehouse findNearestWarehouse(LocationLatLon loc, WorkerType workertype) {
         double minDistance = Double.MAX_VALUE;
         Warehouse nearestWarehouse = null;
         for (Warehouse warehouse : Warehouse.values()) {
