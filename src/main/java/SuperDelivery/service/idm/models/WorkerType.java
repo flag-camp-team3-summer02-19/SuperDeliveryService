@@ -39,4 +39,14 @@ public enum WorkerType {
     public double getCostDist() {
         return costDist;
     }
+
+    public static WorkerType getInstance(int typeID) {
+        if (typeID == ROBOT_TYPEID) {
+            return ROBOT;
+        } else if (typeID == DRONE_TYPEID) {
+            return DRONE;
+        } else {
+            return null;
+        }
+    }
 }

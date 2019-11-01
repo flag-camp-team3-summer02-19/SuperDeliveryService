@@ -22,4 +22,17 @@ public enum Warehouse {
     public LocationLatLon getLocation() {
         return location;
     }
+
+    public static Warehouse getInstance(String dbName) {
+        switch (dbName) {
+            case "1":
+                return WAREHOUSE1;
+            case "2":
+                return WAREHOUSE2;
+            case "3":
+                return WAREHOUSE3;
+            default:
+                return null;
+        }
+    }
 }
