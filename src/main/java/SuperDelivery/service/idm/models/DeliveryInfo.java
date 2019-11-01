@@ -6,13 +6,13 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import java.sql.Timestamp;
 
-@JsonPropertyOrder({"deliveryType", "deliveryTime", "cost"})
+@JsonPropertyOrder({"deliveryType", "deliveryTime", "deliveryStatus", "cost"})
 public class DeliveryInfo {
     @JsonProperty(value = "deliveryType")
     private int deliveryType;
     @JsonProperty(value = "deliveryTime")
     private Timestamp deliveryTime;
-    @JsonIgnore
+    @JsonProperty(value = "deliveryStatus")
     private int deliveryStatus;
     @JsonProperty(value = "cost")
     private float cost;
