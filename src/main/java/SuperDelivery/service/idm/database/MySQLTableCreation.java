@@ -6,6 +6,9 @@ import SuperDelivery.service.idm.logger.ServiceLogger;
 import java.sql.*;
 
 public class MySQLTableCreation {
+    // Database update event interval (60 sec)
+    private static final int UPDATE_INTERVAL = 60;
+
     public static void CreateTable(boolean drop, boolean fakeData) {
         try {
             // Step 1 Connect to MySQL.
@@ -220,7 +223,18 @@ public class MySQLTableCreation {
                 }
             }
 
-            // Step 5 Generate fake data
+            // Step 5 Create database events
+            sql = "SET GLOBAL event_scheduler = ON";
+            statement.executeUpdate(sql);
+            sql = "CREATE EVENT IF NOT EXISTS releaseHold "
+                    + "ON SCHEDULE EVERY ? SECOND "
+                    + "DO UPDATE workers SET holdFor = NULL WHERE holdFor IS NOT NULL "
+                    + "AND holdTime < NOW()";
+            ps = IDMService.getCon().prepareStatement(sql);
+            ps.setInt(1, UPDATE_INTERVAL);
+            ps.execute();
+
+            // Step 6 Generate fake data
             if (fakeData) {
                 generateFakeData();
             }
