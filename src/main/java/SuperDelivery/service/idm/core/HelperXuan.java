@@ -3,6 +3,7 @@ package SuperDelivery.service.idm.core;
 import SuperDelivery.service.idm.IDMService;
 import SuperDelivery.service.idm.logger.ServiceLogger;
 import SuperDelivery.service.idm.models.*;
+import SuperDelivery.service.idm.models.DeliveryMethods.DeliveryMethodsBuilder;
 import SuperDelivery.service.idm.models.DeliveryInfo.DeliveryInfoBuilder;
 import SuperDelivery.service.idm.models.OrderSummary.OrderSummaryBuilder;
 import SuperDelivery.service.idm.models.PackageInfo.PackageInfoBuilder;
@@ -19,10 +20,8 @@ import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Instant;
-import java.util.HashMap;
+import java.sql.Timestamp;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 public class HelperXuan {
@@ -314,40 +313,92 @@ public class HelperXuan {
         }
     }
 
-//    public static Methods getDeliveryMethods(PackageInfo pkgInfo) {
-//        try {
-//            // Get lat and lon for origin and destination address;
-//            LocationLatLon orgLatLon = getLatLon(pkgInfo.getPkgFrom());
-//            LocationLatLon dstLatLon = getLatLon(pkgInfo.getPkgTo());
-//
-//
-//        } catch () {
-//
-//        }
-//
-//    }
+    public static DeliveryMethods getDeliveryMethods(PackageInfo pkgInfo) {
+        DeliveryMethods methods = null;
+        DeliveryMethodsBuilder builder = new DeliveryMethodsBuilder();
+        // Get lat and lon for origin and destination address;
+        LocationLatLon orgLatLon = getLatLon(pkgInfo.getPkgFrom());
+        LocationLatLon dstLatLon = getLatLon(pkgInfo.getPkgTo());
+        // Find cheapest delivery method and fastest delivery method.
+        // MVP design, need to be optimized later
+        DeliveryInfo cheapestDelivery = getCheapestDelivery(orgLatLon, dstLatLon, pkgInfo);
+        DeliveryInfo fastestDelivery = getFastestDelivery(orgLatLon, dstLatLon, pkgInfo);
+        if (cheapestDelivery != null && fastestDelivery != null) {
+            builder.setCheapest(cheapestDelivery.getCost() < fastestDelivery.getCost() ? cheapestDelivery : fastestDelivery);
+            builder.setFastest(fastestDelivery.getDeliveryTime().before(cheapestDelivery.getDeliveryTime()) ? fastestDelivery : cheapestDelivery);
+            methods = builder.build();
+        } else if (cheapestDelivery != null) {
+            builder.setCheapest(cheapestDelivery);
+            builder.setFastest(cheapestDelivery);
+            methods = builder.build();
+        } else if (fastestDelivery != null) {
+            builder.setCheapest(fastestDelivery);
+            builder.setFastest(fastestDelivery);
+            methods = builder.build();
+        }
+        return methods;
+    }
 
-//    private static DeliveryInfo getFastestDelivery(LocationLatLon orgLatLon, LocationLatLon dstLatLon) {
-//        DeliveryInfo fastestDelivery = null;
-//        Warehouse warehouse = findNearestWarehouse(orgLatLon, WorkerType.DRONE);
-//        if (isWorkerAvailable(warehouse, WorkerType.DRONE)) {
-//
-//        }
-//
-//
-//
-//
-//
-//    }
+    private static DeliveryInfo getCheapestDelivery(LocationLatLon orgLatLon, LocationLatLon dstLatLon, PackageInfo pkgInfo) {
+        // MVP: only check nearest robots
+        WorkerType workerType = WorkerType.ROBOT;
+        DeliveryInfo cheapestDelivery = null;
+        Warehouse warehouse = findNearestWarehouse(orgLatLon, workerType);
+        if (isWorkerAvailable(warehouse, workerType)) {
+            double distance = 0;  // unit: meter
+            distance += computeDistanceBetween(warehouse.getLocation(), orgLatLon, workerType.isGeodesic());
+            distance += computeDistanceBetween(orgLatLon, dstLatLon, workerType.isGeodesic());
+            long duration = (long) (distance / workerType.getSpeed());  // unit: second
+            float cost = (float) getDeliveryCost(distance, pkgInfo, workerType);
+            Timestamp deliveryTime = new Timestamp(System.currentTimeMillis() + duration * 1000);
+            cheapestDelivery = new DeliveryInfoBuilder().setDeliveryType(workerType.getTypeID())
+                                                        .setDeliveryTime(deliveryTime)
+                                                        .setCost(cost)
+                                                        .build();
+        }
+        return cheapestDelivery;
+    }
 
-    public static boolean isWorkerAvailable(Warehouse warehouse, WorkerType workerType) {
+    private static DeliveryInfo getFastestDelivery(LocationLatLon orgLatLon, LocationLatLon dstLatLon, PackageInfo pkgInfo) {
+        // MVP: only check nearest drones
+        WorkerType workerType = WorkerType.DRONE;
+        DeliveryInfo fastestDelivery = null;
+        Warehouse warehouse = findNearestWarehouse(orgLatLon, workerType);
+        if (isWorkerAvailable(warehouse, workerType)) {
+            double distance = 0;  // unit: meter
+            distance += computeDistanceBetween(warehouse.getLocation(), orgLatLon, workerType.isGeodesic());
+            distance += computeDistanceBetween(orgLatLon, dstLatLon, workerType.isGeodesic());
+            long duration = (long) (distance / workerType.getSpeed());  // unit: second
+            float cost = (float) getDeliveryCost(distance, pkgInfo, workerType);
+            Timestamp deliveryTime = new Timestamp(System.currentTimeMillis() + duration * 1000);
+            fastestDelivery = new DeliveryInfoBuilder().setDeliveryType(workerType.getTypeID())
+                                                       .setDeliveryTime(deliveryTime)
+                                                       .setCost(cost)
+                                                       .build();
+        }
+        return fastestDelivery;
+    }
+
+    private static double getDeliveryCost(double distance, PackageInfo pkgInfo, WorkerType workerType) {
+        double cost = 0;
+        // cost related to distance
+        cost += distance * workerType.getCostDist();
+        // TODO: hwo to determine cost related to package size and weight?
+        //       add unit cost constants to DeliveryServiceInfo class
+        //       and connected with new cost fields in WorkerType enum
+
+        return cost;
+    }
+
+    private static boolean isWorkerAvailable(Warehouse warehouse, WorkerType workerType) {
         return getAvailableWorker(warehouse, workerType) != -1;
     }
 
     private static int getAvailableWorker(Warehouse warehouse, WorkerType workerType) {
+        // Get the workerID of one available worker of a specific type in a specific warehouse
+        // Return -1 if no such available worker
         try {
-            String query = "SELECT workerID FROM workers wk WHERE warehouse = ? AND workerType = ? AND "
-                    + "wk.availableTime <= NOW()";
+            String query = "SELECT workerID FROM workers wk WHERE warehouse = ? AND workerType = ? AND wk.availableTime <= NOW()";
             PreparedStatement ps = IDMService.getCon().prepareStatement(query);
             ps.setString(1, warehouse.getDbName());
             ps.setString(2, workerType.getDbName());
