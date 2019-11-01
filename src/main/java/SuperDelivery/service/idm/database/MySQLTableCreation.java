@@ -156,21 +156,6 @@ public class MySQLTableCreation {
                     + ")";
             statement.executeUpdate(sql);
 
-            sql = "CREATE TABLE IF NOT EXISTS orders ("
-                    + "orderID int AUTO_INCREMENT,"
-                    + "email VARCHAR(50) NOT NULL,"
-                    + "orderedTime timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,"
-                    + "package int NOT NULL,"
-                    + "delivery int NOT NULL,"
-                    + "location int NOT NULL,"
-                    + "PRIMARY KEY (orderID),"
-                    + "FOREIGN KEY (email) REFERENCES users (email) ON UPDATE CASCADE ON DELETE CASCADE,"
-                    + "FOREIGN KEY (package) REFERENCES package_info (packageID) ON UPDATE CASCADE ON DELETE CASCADE,"
-                    + "FOREIGN KEY (delivery) REFERENCES delivery_info (deliveryID) ON UPDATE CASCADE ON DELETE CASCADE,"
-                    + "FOREIGN KEY (location) REFERENCES location_info (locationID) ON UPDATE CASCADE ON DELETE CASCADE"
-                    + ")";
-            statement.executeUpdate(sql);
-
             sql = "CREATE TABLE IF NOT EXISTS warehouse_info ("
                     + "warehouseID ENUM('1', '2', '3') NOT NULL,"
                     + "lat DECIMAL(9,6) NOT NULL,"
@@ -183,14 +168,29 @@ public class MySQLTableCreation {
                     + "workerID int AUTO_INCREMENT,"
                     + "workerType ENUM('ROBOT', 'DRONE') NOT NULL,"
                     + "warehouse ENUM('1', '2', '3') NOT NULL,"
-                    + "task int,"
                     + "holdFor VARCHAR(50),"
                     + "holdTime TIMESTAMP,"
                     + "pickupTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,"
                     + "availableTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,"
                     + "PRIMARY KEY (workerID),"
-                    + "FOREIGN KEY (task) REFERENCES orders (orderID),"
                     + "FOREIGN KEY (warehouse) REFERENCES warehouse_info(warehouseID)"
+                    + ")";
+            statement.executeUpdate(sql);
+
+            sql = "CREATE TABLE IF NOT EXISTS orders ("
+                    + "orderID int AUTO_INCREMENT,"
+                    + "email VARCHAR(50) NOT NULL,"
+                    + "orderedTime timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,"
+                    + "package int NOT NULL,"
+                    + "delivery int NOT NULL,"
+                    + "location int NOT NULL,"
+                    + "worker int,"
+                    + "PRIMARY KEY (orderID),"
+                    + "FOREIGN KEY (email) REFERENCES users (email) ON UPDATE CASCADE ON DELETE CASCADE,"
+                    + "FOREIGN KEY (package) REFERENCES package_info (packageID) ON UPDATE CASCADE ON DELETE CASCADE,"
+                    + "FOREIGN KEY (delivery) REFERENCES delivery_info (deliveryID) ON UPDATE CASCADE ON DELETE CASCADE,"
+                    + "FOREIGN KEY (location) REFERENCES location_info (locationID) ON UPDATE CASCADE ON DELETE CASCADE,"
+                    + "FOREIGN KEY (worker) REFERENCES workers (workerID) ON UPDATE CASCADE ON DELETE CASCADE"
                     + ")";
             statement.executeUpdate(sql);
 
