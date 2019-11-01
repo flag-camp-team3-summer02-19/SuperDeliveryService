@@ -1,5 +1,6 @@
 package SuperDelivery.service.idm.models;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
@@ -19,6 +20,23 @@ public class PackageInfo {
     private String pkgTo;
     @JsonProperty(value = "notes")
     private String pkgNotes;
+
+    @JsonCreator
+    public PackageInfo(@JsonProperty(value = "length", required = true) float pkgLength,
+                       @JsonProperty(value = "width", required = true) float pkgWidth,
+                       @JsonProperty(value = "height", required = true) float pkgHeight,
+                       @JsonProperty(value = "weight", required = true) float pkgWeight,
+                       @JsonProperty(value = "from", required = true) String pkgFrom,
+                       @JsonProperty(value = "to", required = true) String pkgTo,
+                       @JsonProperty(value = "notes", required = true) String pkgNotes) {
+        this.pkgLength = pkgLength;
+        this.pkgWidth = pkgWidth;
+        this.pkgHeight = pkgHeight;
+        this.pkgWeight = pkgWeight;
+        this.pkgFrom = pkgFrom;
+        this.pkgTo = pkgTo;
+        this.pkgNotes = pkgNotes;
+    }
 
     private PackageInfo(PackageInfoBuilder builder) {
         this.pkgLength = builder.pkgLength;
