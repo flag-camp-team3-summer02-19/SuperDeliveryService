@@ -82,12 +82,11 @@ public class HelperXuan {
         return false;
     }
 
-    public static Set<OrderSummary> getOrderList(String sessionID) {
-        Set<OrderSummary> orders = new HashSet<>();
-
+    private static String getEmail (String sessionID) {
+        String email = null;
         try {
             // Construct the query
-            String query = "SELECT email FROM sessions WHERE sessionID=?";
+            String query = "SELECT email FROM sessions WHERE sessionID = ?";
             // Create the prepared statement
             PreparedStatement ps = IDMService.getCon().prepareStatement(query);
             // Set the parameters
@@ -96,8 +95,20 @@ public class HelperXuan {
             ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
             ResultSet rs = ps.executeQuery();
             rs.next();
-            String email = rs.getString("email");
+            email = rs.getString("email");
             ServiceLogger.LOGGER.info("Query succeeded, user email: " + email);
+        } catch (SQLException e) {
+            ServiceLogger.LOGGER.warning("Error during query.");
+            e.printStackTrace();
+        }
+        return email;
+    }
+
+    public static Set<OrderSummary> getOrderList(String sessionID) {
+        Set<OrderSummary> orders = new HashSet<>();
+        String email = getEmail(sessionID);
+
+        try {
             // Get orderIDs for current user
             Set<Integer> orderIDs = getOrderIDs(email);
             for (int orderID : orderIDs) {
@@ -107,10 +118,10 @@ public class HelperXuan {
                 ServiceLogger.LOGGER.info("Trying to retrieve order " + orderID);
 
                 // Get orderedTime, packageID, deliveryID, and locationID
-                query = "SELECT orderedTime, package, delivery, location FROM orders WHERE orderID = ?";
-                ps = IDMService.getCon().prepareStatement(query);
+                String query = "SELECT orderedTime, package, delivery, location FROM orders WHERE orderID = ?";
+                PreparedStatement ps = IDMService.getCon().prepareStatement(query);
                 ps.setInt(1, orderID);
-                rs = ps.executeQuery();
+                ResultSet rs = ps.executeQuery();
 
                 while (rs.next()) {
                     builder.setOrderedTime(rs.getTimestamp("orderedTime"));
