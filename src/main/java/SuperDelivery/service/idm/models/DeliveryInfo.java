@@ -16,12 +16,15 @@ public class DeliveryInfo {
     private int deliveryStatus;
     @JsonProperty(value = "cost")
     private float cost;
+    @JsonIgnore
+    private int workerID;
 
     private DeliveryInfo(DeliveryInfoBuilder builder) {
         this.deliveryType = builder.deliveryType;
         this.deliveryTime = builder.deliveryTime;
         this.deliveryStatus = builder.deliveryStatus;
         this.cost = builder.cost;
+        this.workerID = builder.workerID;
     }
 
     public int getDeliveryType() {
@@ -40,11 +43,16 @@ public class DeliveryInfo {
         return cost;
     }
 
+    public int getWorkerID() {
+        return workerID;
+    }
+
     public static class DeliveryInfoBuilder {
         private int deliveryType;
         private Timestamp deliveryTime;
         private int deliveryStatus;
         private float cost;
+        private int workerID;
 
         public DeliveryInfoBuilder setDeliveryType(int deliveryType) {
             this.deliveryType = deliveryType;
@@ -63,6 +71,11 @@ public class DeliveryInfo {
 
         public DeliveryInfoBuilder setCost(float cost) {
             this.cost = cost;
+            return this;
+        }
+
+        public DeliveryInfoBuilder setWorkerID(int workerID) {
+            this.workerID = workerID;
             return this;
         }
 

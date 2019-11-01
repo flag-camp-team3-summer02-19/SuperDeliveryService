@@ -16,6 +16,8 @@ import com.google.maps.GeoApiContext;
 import com.google.maps.GeocodingApi;
 import com.google.maps.model.*;
 
+import static SuperDelivery.service.idm.constants.DeliveryServiceInfo.MAXHOLD;
+
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -324,7 +326,8 @@ public class HelperXuan {
         }
     }
 
-    public static DeliveryMethods getDeliveryMethods(PackageInfo pkgInfo) {
+    public static DeliveryMethods getDeliveryMethods(PackageInfo pkgInfo, String sessionID) {
+        String email = getEmail(sessionID);
         DeliveryMethods methods = null;
         DeliveryMethodsBuilder builder = new DeliveryMethodsBuilder();
         // Get lat and lon for origin and destination address;
@@ -335,14 +338,18 @@ public class HelperXuan {
         DeliveryInfo cheapestDelivery = getCheapestDelivery(orgLatLon, dstLatLon, pkgInfo);
         DeliveryInfo fastestDelivery = getFastestDelivery(orgLatLon, dstLatLon, pkgInfo);
         if (cheapestDelivery != null && fastestDelivery != null) {
+            holdWorkerForUser(email, cheapestDelivery.getWorkerID());
+            holdWorkerForUser(email, fastestDelivery.getWorkerID());
             builder.setCheapest(cheapestDelivery.getCost() < fastestDelivery.getCost() ? cheapestDelivery : fastestDelivery);
             builder.setFastest(fastestDelivery.getDeliveryTime().before(cheapestDelivery.getDeliveryTime()) ? fastestDelivery : cheapestDelivery);
             methods = builder.build();
         } else if (cheapestDelivery != null) {
+            holdWorkerForUser(email, cheapestDelivery.getWorkerID());
             builder.setCheapest(cheapestDelivery);
             builder.setFastest(cheapestDelivery);
             methods = builder.build();
         } else if (fastestDelivery != null) {
+            holdWorkerForUser(email, fastestDelivery.getWorkerID());
             builder.setCheapest(fastestDelivery);
             builder.setFastest(fastestDelivery);
             methods = builder.build();
@@ -350,12 +357,29 @@ public class HelperXuan {
         return methods;
     }
 
+    private static void holdWorkerForUser(String email, int workerID) {
+        try {
+            String query = "UPDATE workers SET holdFor = ?, holdTime = ? WHERE workerID = ?";
+            PreparedStatement ps = IDMService.getCon().prepareStatement(query);
+            ps.setString(1, email);
+            ps.setTimestamp(2, new Timestamp(System.currentTimeMillis() + MAXHOLD));
+            ps.setInt(3, workerID);
+            ServiceLogger.LOGGER.info("Trying update: " + ps.toString());
+            ps.execute();
+            ServiceLogger.LOGGER.info("Workers updates successfully.");
+        } catch (SQLException e) {
+            ServiceLogger.LOGGER.warning("Error during updating.");
+            e.printStackTrace();
+        }
+    }
+
     private static DeliveryInfo getCheapestDelivery(LocationLatLon orgLatLon, LocationLatLon dstLatLon, PackageInfo pkgInfo) {
         // MVP: only check nearest robots
         WorkerType workerType = WorkerType.ROBOT;
         DeliveryInfo cheapestDelivery = null;
         Warehouse warehouse = findNearestWarehouse(orgLatLon, workerType);
-        if (isWorkerAvailable(warehouse, workerType)) {
+        int workerID = getAvailableWorker(warehouse, workerType);
+        if (workerID != -1) {
             double distance = 0;  // unit: meter
             distance += computeDistanceBetween(warehouse.getLocation(), orgLatLon, workerType.isGeodesic());
             distance += computeDistanceBetween(orgLatLon, dstLatLon, workerType.isGeodesic());
@@ -365,6 +389,7 @@ public class HelperXuan {
             cheapestDelivery = new DeliveryInfoBuilder().setDeliveryType(workerType.getTypeID())
                                                         .setDeliveryTime(deliveryTime)
                                                         .setCost(cost)
+                                                        .setWorkerID(workerID)
                                                         .build();
         }
         return cheapestDelivery;
@@ -375,7 +400,8 @@ public class HelperXuan {
         WorkerType workerType = WorkerType.DRONE;
         DeliveryInfo fastestDelivery = null;
         Warehouse warehouse = findNearestWarehouse(orgLatLon, workerType);
-        if (isWorkerAvailable(warehouse, workerType)) {
+        int workerID = getAvailableWorker(warehouse, workerType);
+        if (workerID != -1) {
             double distance = 0;  // unit: meter
             distance += computeDistanceBetween(warehouse.getLocation(), orgLatLon, workerType.isGeodesic());
             distance += computeDistanceBetween(orgLatLon, dstLatLon, workerType.isGeodesic());
@@ -385,6 +411,7 @@ public class HelperXuan {
             fastestDelivery = new DeliveryInfoBuilder().setDeliveryType(workerType.getTypeID())
                                                        .setDeliveryTime(deliveryTime)
                                                        .setCost(cost)
+                                                       .setWorkerID(workerID)
                                                        .build();
         }
         return fastestDelivery;
@@ -417,9 +444,10 @@ public class HelperXuan {
             ResultSet rs = ps.executeQuery();
             ServiceLogger.LOGGER.info("Query succeeded.");
             if(rs.next()){
-                ServiceLogger.LOGGER.info("There is available " + workerType.getDbName()
-                        + " in warehouse " + warehouse.getDbName());
-                return rs.getInt("workerID");
+                int workerID = rs.getInt("workerID");
+                ServiceLogger.LOGGER.info(workerType.getDbName() + "(id: " + workerID
+                        + ") is available in warehouse " + warehouse.getDbName());
+                return workerID;
             } else {
                 ServiceLogger.LOGGER.info("There is no available " + workerType.getDbName()
                         + " in warehouse " + warehouse.getDbName());

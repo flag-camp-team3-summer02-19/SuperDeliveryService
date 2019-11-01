@@ -18,16 +18,23 @@ public class DeliveryServiceInfo {
     public static final double ROBOTCOST_DIST = 0.001; // unit: dollar/m
     public static final double DRONECOST_DIST = 0.008; // unit: dollar/m
     // TODO: add cost related to size and weight
+
+    // deliveryTypeID in database (defined by frontend)
     public static int ROBOT_TYPEID;
     public static int DRONE_TYPEID;
 
+    // 3 warehouse locations
     public static LocationLatLon WAREHOUSE1;
     public static LocationLatLon WAREHOUSE2;
     public static LocationLatLon WAREHOUSE3;
 
+    // deliveryStatusID in database (defined by frontend)
     public static int ORDER_PLACED;
     public static int IN_PROGRESS;
     public static int DELIVERED;
+
+    // Max worker hold time for user (5 min)
+    public static final long MAXHOLD = 300000;
 
     static {
         try {

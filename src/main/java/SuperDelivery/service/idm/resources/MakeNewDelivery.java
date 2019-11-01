@@ -40,7 +40,7 @@ public class MakeNewDelivery {
                 String sessionID = sessionIDs.get(0);
                 if (isSessionValid(sessionID)) {
                     ServiceLogger.LOGGER.info("Session is valid");
-                    DeliveryMethods methods = getDeliveryMethods(requestModel.getPackageInfo());
+                    DeliveryMethods methods = getDeliveryMethods(requestModel.getPackageInfo(), sessionID);
                     if (methods != null) {
                         ServiceLogger.LOGGER.info("Delivery methods found successfully");
                         responseModel.setResultCode(150);
