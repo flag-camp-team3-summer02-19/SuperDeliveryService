@@ -22,6 +22,10 @@ public class MySQLTableCreation {
             Statement statement = conn.createStatement();
             String sql = null;
 
+            // Setup MySQL server current time zone (PST).
+            sql = "SET GLOBAL time_zone = '-7:00'";
+            statement.executeUpdate(sql);
+
             if (drop) {
                 // Step 2 Drop tables in case they exist.
                 sql = "DROP TABLE IF EXISTS sessions";
