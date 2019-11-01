@@ -33,7 +33,7 @@ public class CorsFilter implements ContainerRequestFilter, ContainerResponseFilt
 
         // We need to add these CORS headers in the response
         responseContext.getHeaders().add("Access-Control-Allow-Credentials", "true");
-        responseContext.getHeaders().add("Access-Control-Allow-Headers", "origin, content-type, accept, authorization");
+        responseContext.getHeaders().add("Access-Control-Allow-Headers", "origin, content-type, sessionID, accept, authorization");
         responseContext.getHeaders().add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
         responseContext.getHeaders().add("Access-Control-Allow-Origin", "http://localhost:3006");
     }
