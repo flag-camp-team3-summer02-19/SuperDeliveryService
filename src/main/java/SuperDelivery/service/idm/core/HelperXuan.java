@@ -16,7 +16,7 @@ import com.google.maps.GeoApiContext;
 import com.google.maps.GeocodingApi;
 import com.google.maps.model.*;
 
-import static SuperDelivery.service.idm.constants.DeliveryServiceInfo.MAXHOLD;
+import static SuperDelivery.service.idm.constants.DeliveryServiceInfo.*;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
@@ -337,6 +337,8 @@ public class HelperXuan {
         // MVP design, need to be optimized later
         DeliveryInfo cheapestDelivery = getCheapestDelivery(orgLatLon, dstLatLon, pkgInfo);
         DeliveryInfo fastestDelivery = getFastestDelivery(orgLatLon, dstLatLon, pkgInfo);
+        // First release all previously held workers
+        releaseWorkerForUser(email);
         if (cheapestDelivery != null && fastestDelivery != null) {
             holdWorkerForUser(email, cheapestDelivery.getWorkerID());
             holdWorkerForUser(email, fastestDelivery.getWorkerID());
@@ -366,9 +368,23 @@ public class HelperXuan {
             ps.setInt(3, workerID);
             ServiceLogger.LOGGER.info("Trying update: " + ps.toString());
             ps.execute();
-            ServiceLogger.LOGGER.info("Workers updates successfully.");
+            ServiceLogger.LOGGER.info("Workers held successfully.");
         } catch (SQLException e) {
-            ServiceLogger.LOGGER.warning("Error during updating.");
+            ServiceLogger.LOGGER.warning("Error during holding.");
+            e.printStackTrace();
+        }
+    }
+
+    private static void releaseWorkerForUser(String email) {
+        try {
+            String query = "UPDATE workers SET holdFor = NULL WHERE holdFor = ?";
+            PreparedStatement ps = IDMService.getCon().prepareStatement(query);
+            ps.setString(1, email);
+            ServiceLogger.LOGGER.info("Trying update: " + ps.toString());
+            ps.execute();
+            ServiceLogger.LOGGER.info("Workers released successfully.");
+        } catch (SQLException e) {
+            ServiceLogger.LOGGER.warning("Error during releasing.");
             e.printStackTrace();
         }
     }
@@ -436,7 +452,8 @@ public class HelperXuan {
         // Get the workerID of one available worker of a specific type in a specific warehouse
         // Return -1 if no such available worker
         try {
-            String query = "SELECT workerID FROM workers wk WHERE warehouse = ? AND workerType = ? AND wk.availableTime <= NOW()";
+            String query = "SELECT workerID FROM workers WHERE warehouse = ? AND workerType = ? "
+                    + "AND availableTime <= NOW() AND holdFor IS NULL";
             PreparedStatement ps = IDMService.getCon().prepareStatement(query);
             ps.setString(1, warehouse.getDbName());
             ps.setString(2, workerType.getDbName());
@@ -533,5 +550,74 @@ public class HelperXuan {
         double r = 6378137;
         return (c * r);
     }
+
+    private static boolean prepareOrder(PackageInfo pkgInfo, DeliveryInfo dlvInfo, String sessionID) {
+        // Populate order information
+        String email = getEmail(sessionID);
+        WorkerType workerType = null;
+        if (dlvInfo.getDeliveryType() == ROBOT_TYPEID) {
+            workerType = WorkerType.ROBOT;
+        } else if (dlvInfo.getDeliveryType() == DRONE_TYPEID) {
+            workerType = WorkerType.DRONE;
+        } else {
+            ServiceLogger.LOGGER.warning("DeliveryType does not have a related WorkerType model.");
+            return false;
+        }
+
+        return true;
+    }
+
+    private static int insertPackageInfo(PackageInfo pkgInfo) {
+        // Return packageID if insert successfully, otherwise return -1
+        try {
+            String query = "INSERT INTO package_info (pkgLength, pkgWidth, pkgHeight, pkgWeight, pkgFrom, pkgTo, pkgNotes) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+            PreparedStatement ps = IDMService.getCon().prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);
+            ps.setFloat(1, pkgInfo.getPkgLength());
+            ps.setFloat(2, pkgInfo.getPkgWidth());
+            ps.setFloat(3, pkgInfo.getPkgHeight());
+            ps.setFloat(4, pkgInfo.getPkgWeight());
+            ps.setString(5, pkgInfo.getPkgFrom());
+            ps.setString(6, pkgInfo.getPkgTo());
+            ps.setString(7, pkgInfo.getPkgNotes());
+            ps.executeUpdate();
+            ResultSet rs = ps.getGeneratedKeys();
+            rs.next();
+            return rs.getInt(1);
+        } catch (SQLException e) {
+            ServiceLogger.LOGGER.warning("Error during insert.");
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    private static int insertDeliveryInfo(DeliveryInfo dlvInfo) {
+        // Return deliveryID if insert successfully, otherwise return -1
+        try {
+            String query = "INSERT INTO delivery_info (deliveryType, deliveryTime, deliveryStatus, cost) "
+                    + "VALUES (?, ?, ?, ?)";
+            PreparedStatement ps = IDMService.getCon().prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);
+            ps.setInt(1, dlvInfo.getDeliveryType());
+            ps.setTimestamp(2, dlvInfo.getDeliveryTime());
+            ps.setInt(3, ORDER_PLACED);
+            ps.setFloat(4, dlvInfo.getCost());
+            ps.executeUpdate();
+            ResultSet rs = ps.getGeneratedKeys();
+            rs.next();
+            return rs.getInt(1);
+        } catch (SQLException e) {
+            ServiceLogger.LOGGER.warning("Error during insert.");
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+//    private static int insertLocationInfo(PackageInfo pkgInfo) {
+//        try {
+//
+//        } catch ()
+//    }
+
+
 
 }
