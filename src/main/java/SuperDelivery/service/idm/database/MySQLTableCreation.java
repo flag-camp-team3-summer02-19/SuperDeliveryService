@@ -177,6 +177,8 @@ public class MySQLTableCreation {
                     + "workerType ENUM('ROBOT', 'DRONE') NOT NULL,"
                     + "warehouse ENUM('1', '2', '3') NOT NULL,"
                     + "task int,"
+                    + "holdFor VARCHAR(50),"
+                    + "holdTime TIMESTAMP,"
                     + "pickupTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,"
                     + "availableTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,"
                     + "PRIMARY KEY (workerID),"
