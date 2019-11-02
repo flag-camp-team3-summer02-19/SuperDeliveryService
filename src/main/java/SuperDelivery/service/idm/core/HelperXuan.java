@@ -564,7 +564,7 @@ public class HelperXuan {
         return (c * r);
     }
 
-    private static boolean prepareOrder(PackageInfo pkgInfo, DeliveryInfo dlvInfo, String sessionID) {
+    public static boolean prepareOrder(PackageInfo pkgInfo, DeliveryInfo dlvInfo, String sessionID) {
         // Populate order information
         String email = getEmail(sessionID);
         // Get worker type
@@ -629,14 +629,17 @@ public class HelperXuan {
                 ServiceLogger.LOGGER.warning("Order is placed successfully.");
                 return true;
             } else {
-                ServiceLogger.LOGGER.info("Hold worker has been released (payment not received within " + MAXHOLD/1000/60 + " min.");
+                ServiceLogger.LOGGER.info("Hold worker has been released (payment not received within " + MAXHOLD/1000/60 + " min).");
                 return false;
             }
         } catch (SQLException e) {
             ServiceLogger.LOGGER.warning("Error during query.");
             e.printStackTrace();
+        } catch (NullPointerException e) {
+            ServiceLogger.LOGGER.warning("Please check if you input a valid worker type (WorkerType) and addresses.");
+            e.printStackTrace();
         } catch (Exception e) {
-            ServiceLogger.LOGGER.warning("There might be a model mismatch problem. Check WorkerType or Warehouse.");
+            ServiceLogger.LOGGER.warning("Unexpected exception happens.");
             e.printStackTrace();
         }
         return false;
