@@ -187,6 +187,8 @@ public class MySQLTableCreation {
                     + "delivery int NOT NULL,"
                     + "location int NOT NULL,"
                     + "worker int,"
+                    + "token VARCHAR(50) NOT NULL,"
+                    + "transactionID VARCHAR(50),"
                     + "PRIMARY KEY (orderID),"
                     + "FOREIGN KEY (email) REFERENCES users (email) ON UPDATE CASCADE ON DELETE CASCADE,"
                     + "FOREIGN KEY (package) REFERENCES package_info (packageID) ON UPDATE CASCADE ON DELETE CASCADE,"
@@ -266,9 +268,9 @@ public class MySQLTableCreation {
             Statement statement = conn.createStatement();
             String sql = null;
 
-            // fake user:  email: xuanli@gmail.com   password: 1234
+            // fake user:  email: xuanli@gmail.com   password: 123
             sql = "INSERT IGNORE INTO users (email, salt, pword)"
-                    + "VALUE ('xuanli@gmail.com', 'faebc446', 'e91cbf2be1aedc3c0c1b6a94d5652c1d67ee67d1f592096b56348b5a577cb217743e3806ae8557c2c83f506734bda5e885b8cb6c3b8f8fa38c984062400daf94')";
+                    + "VALUE ('xuanli@gmail.com', 'd00740ab', '08c67f3627cf63b4fc96b758f19076a719144b03aff2d9bc33dd112ca19420907a3c84bd3a9fbb77fd3078dd91c4079dbfc5b844a687a5819685a48cafad29ce')";
             statement.executeUpdate(sql);
 
             // fake order 1
@@ -297,6 +299,132 @@ public class MySQLTableCreation {
             statement.executeUpdate(sql);
             sql = "INSERT IGNORE INTO orders (orderID, email, package, delivery, location, worker) "
                     + "VALUES (2, 'xuanli@gmail.com', 2, 2, 2, 2)";
+            statement.executeUpdate(sql);
+
+            // fake order 3
+            sql = "INSERT IGNORE INTO package_info (packageID, pkgLength, pkgWidth, pkgHeight, pkgWeight, pkgFrom, pkgTo, pkgNotes) "
+                    + "VALUES (3, 5, 4, 3, 2, '1398 Valencia St San Francisco, California(CA), 94110', '33 Shields St San Francisco, California(CA), 94132', 'gift for dad')";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO delivery_info (deliveryID, deliveryType, deliveryStatus, cost) "
+                    + "VALUES (3, 3, 0, 30)";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO location_info (locationID, currentLat, currentLon, destinationLat, destinationLon) "
+                    + "VALUES (3, 37.720015, -122.458905, 37.717832, -122.463228)";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO orders (orderID, email, package, delivery, location, worker) "
+                    + "VALUES (3, 'xuanli@gmail.com', 3, 3, 3, 3)";
+            statement.executeUpdate(sql);
+
+            // fake order 4
+            sql = "INSERT IGNORE INTO package_info (packageID, pkgLength, pkgWidth, pkgHeight, pkgWeight, pkgFrom, pkgTo, pkgNotes) "
+                    + "VALUES (4, 4, 3, 5, 3, '524 Gates St San Francisco, California(CA), 94110', '254 Bright St San Francisco, California(CA), 94132', 'gift for mom')";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO delivery_info (deliveryID, deliveryType, deliveryStatus, cost) "
+                    + "VALUES (4, 4, 1, 60)";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO location_info (locationID, currentLat, currentLon, destinationLat, destinationLon) "
+                    + "VALUES (4, 37.715342, -122.463503, 37.715384, -122.463311)";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO orders (orderID, email, package, delivery, location, worker) "
+                    + "VALUES (4, 'xuanli@gmail.com', 4, 4, 4, 4)";
+            statement.executeUpdate(sql);
+
+            // fake order 5
+            sql = "INSERT IGNORE INTO package_info (packageID, pkgLength, pkgWidth, pkgHeight, pkgWeight, pkgFrom, pkgTo, pkgNotes) "
+                    + "VALUES (5, 4, 5, 5, 4, '450 Duboce Ave San Francisco, California(CA), 94117', '1354 44th Ave San Francisco, California(CA), 94122', 'gift for child')";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO delivery_info (deliveryID, deliveryType, deliveryStatus, cost) "
+                    + "VALUES (5, 3, 0, 40)";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO location_info (locationID, currentLat, currentLon, destinationLat, destinationLon) "
+                    + "VALUES (5, 37.761364, -122.503817, 37.761402, -122.503625)";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO orders (orderID, email, package, delivery, location, worker) "
+                    + "VALUES (5, 'xuanli@gmail.com', 5, 5, 5, 5)";
+            statement.executeUpdate(sql);
+
+            // fake order 6
+            sql = "INSERT IGNORE INTO package_info (packageID, pkgLength, pkgWidth, pkgHeight, pkgWeight, pkgFrom, pkgTo, pkgNotes) "
+                    + "VALUES (6, 6, 5, 5, 5, '2701 Green St San Francisco, California(CA), 94123', '1845 25th St San Francisco, California(CA), 94107', 'gift for wife')";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO delivery_info (deliveryID, deliveryType, deliveryStatus, cost) "
+                    + "VALUES (6, 4, 1, 120.0)";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO location_info (locationID, currentLat, currentLon, destinationLat, destinationLon) "
+                    + "VALUES (6, 37.797358, -122.441170, 37.752175, -122.397278)";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO orders (orderID, email, package, delivery, location, worker) "
+                    + "VALUES (6, 'xuanli@gmail.com', 6, 6, 6, 6)";
+            statement.executeUpdate(sql);
+
+            // fake order 7
+            sql = "INSERT IGNORE INTO package_info (packageID, pkgLength, pkgWidth, pkgHeight, pkgWeight, pkgFrom, pkgTo, pkgNotes) "
+                    + "VALUES (7, 6, 5, 5, 6, '2701 Green St San Francisco, California(CA), 94123', '1845 25th St San Francisco, California(CA), 94107', 'The wise understand by themselves; fools follow the reports of others. \\nTibetan (on wisdom)')";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO delivery_info (deliveryID, deliveryType, deliveryStatus, cost) "
+                    + "VALUES (7, 3, 0, 35.5)";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO location_info (locationID, currentLat, currentLon, destinationLat, destinationLon) "
+                    + "VALUES (7, 37.797358, -122.441170, 37.752175, -122.397278)";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO orders (orderID, email, package, delivery, location, worker) "
+                    + "VALUES (7, 'xuanli@gmail.com', 7, 7, 7, 7)";
+            statement.executeUpdate(sql);
+
+            // fake order 8
+            sql = "INSERT IGNORE INTO package_info (packageID, pkgLength, pkgWidth, pkgHeight, pkgWeight, pkgFrom, pkgTo, pkgNotes) "
+                    + "VALUES (8, 6, 5, 5, 6, '2701 Green St San Francisco, California(CA), 94123', '1845 25th St San Francisco, California(CA), 94107', 'Lost time is never found again. Ben Franklin (1706-1790)')";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO delivery_info (deliveryID, deliveryType, deliveryStatus, cost) "
+                    + "VALUES (8, 4, 1, 79.4)";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO location_info (locationID, currentLat, currentLon, destinationLat, destinationLon) "
+                    + "VALUES (8, 37.797358,-122.441170, 37.752175, -122.397278)";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO orders (orderID, email, package, delivery, location, worker) "
+                    + "VALUES (8, 'xuanli@gmail.com', 8, 8, 8, 8)";
+            statement.executeUpdate(sql);
+
+            // fake order 9
+            sql = "INSERT IGNORE INTO package_info (packageID, pkgLength, pkgWidth, pkgHeight, pkgWeight, pkgFrom, pkgTo, pkgNotes) "
+                    + "VALUES (9, 6, 5, 5, 6, '2701 Green St San Francisco, California(CA), 94123', '1845 25th St San Francisco, California(CA), 94107', 'You have to guess what''s in this gift')";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO delivery_info (deliveryID, deliveryType, deliveryStatus, cost) "
+                    + "VALUES (9, 4, 1, 79.4)";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO location_info (locationID, currentLat, currentLon, destinationLat, destinationLon) "
+                    + "VALUES (9, 37.797358,-122.441170, 37.752175, -122.397278)";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO orders (orderID, email, package, delivery, location, worker) "
+                    + "VALUES (9, 'xuanli@gmail.com', 9, 9, 9, 9)";
+            statement.executeUpdate(sql);
+
+            // fake order 10
+            sql = "INSERT IGNORE INTO package_info (packageID, pkgLength, pkgWidth, pkgHeight, pkgWeight, pkgFrom, pkgTo, pkgNotes) "
+                    + "VALUES (10, 6, 5, 5, 6, '2701 Green St San Francisco, California(CA), 94123', '1845 25th St San Francisco, California(CA), 94107', 'I like this gift for my brave son')";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO delivery_info (deliveryID, deliveryType, deliveryStatus, cost) "
+                    + "VALUES (10, 4, 1, 79.4)";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO location_info (locationID, currentLat, currentLon, destinationLat, destinationLon) "
+                    + "VALUES (10, 37.797358,-122.441170, 37.752175, -122.397278)";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO orders (orderID, email, package, delivery, location, worker) "
+                    + "VALUES (10, 'xuanli@gmail.com', 10, 10, 10, 10)";
+            statement.executeUpdate(sql);
+
+            // fake order 11
+            sql = "INSERT IGNORE INTO package_info (packageID, pkgLength, pkgWidth, pkgHeight, pkgWeight, pkgFrom, pkgTo, pkgNotes) "
+                    + "VALUES (11, 6, 5, 5, 6, '2701 Green St San Francisco, California(CA), 94123', '1845 25th St San Francisco, California(CA), 94107', 'This is another gift for my lovely daughter')";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO delivery_info (deliveryID, deliveryType, deliveryStatus, cost) "
+                    + "VALUES (11, 4, 1, 79.4)";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO location_info (locationID, currentLat, currentLon, destinationLat, destinationLon) "
+                    + "VALUES (11, 37.797358,-122.441170, 37.752175, -122.397278)";
+            statement.executeUpdate(sql);
+            sql = "INSERT IGNORE INTO orders (orderID, email, package, delivery, location, worker) "
+                    + "VALUES (11, 'xuanli@gmail.com', 11, 11, 11, 11)";
             statement.executeUpdate(sql);
 
         } catch (Exception e) {

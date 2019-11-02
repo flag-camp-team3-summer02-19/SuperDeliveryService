@@ -3,20 +3,18 @@ package SuperDelivery.service.idm.core;
 import SuperDelivery.service.idm.IDMService;
 import SuperDelivery.service.idm.logger.ServiceLogger;
 import SuperDelivery.service.idm.models.*;
-import SuperDelivery.service.idm.models.DeliveryMethods.DeliveryMethodsBuilder;
 import SuperDelivery.service.idm.models.DeliveryInfo.DeliveryInfoBuilder;
-import SuperDelivery.service.idm.models.OrderSummary.OrderSummaryBuilder;
-import SuperDelivery.service.idm.models.PackageInfo.PackageInfoBuilder;
+import SuperDelivery.service.idm.models.DeliveryMethods.DeliveryMethodsBuilder;
 import SuperDelivery.service.idm.models.LocationInfo.LocationInfoBuilder;
 import SuperDelivery.service.idm.models.LocationLatLon.LocationLatLonBuilder;
+import SuperDelivery.service.idm.models.OrderSummary.OrderSummaryBuilder;
+import SuperDelivery.service.idm.models.PackageInfo.PackageInfoBuilder;
 import SuperDelivery.service.idm.security.Session;
 import SuperDelivery.service.idm.security.Token;
 import com.google.maps.DistanceMatrixApi;
 import com.google.maps.GeoApiContext;
 import com.google.maps.GeocodingApi;
 import com.google.maps.model.*;
-
-import static SuperDelivery.service.idm.constants.DeliveryServiceInfo.*;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
@@ -25,6 +23,9 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
+
+import static SuperDelivery.service.idm.constants.DeliveryServiceInfo.MAXHOLD;
+import static SuperDelivery.service.idm.constants.DeliveryServiceInfo.ORDER_PLACED;
 
 public class HelperXuan {
     public static boolean isSessionValid(String sessionID) {
@@ -579,7 +580,8 @@ public class HelperXuan {
         return (c * r);
     }
 
-    public static boolean prepareOrder(PackageInfo pkgInfo, DeliveryInfo dlvInfo, String sessionID) {
+
+    public static boolean prepareOrder(PackageInfo pkgInfo, DeliveryInfo dlvInfo, String sessionID, String token) {
         // Populate order information
         String email = getEmail(sessionID);
         // Get worker type
@@ -630,7 +632,7 @@ public class HelperXuan {
                 if (locationID == - 1) {
                     return false;
                 }
-                String query2 = "INSERT INTO orders (email, orderedTime, package, delivery, location, worker)"
+                String query2 = "INSERT INTO orders (email, orderedTime, package, delivery, location, worker, token)"
                         + "VALUES (?, ?, ?, ?, ?, ?)";
                 PreparedStatement ps2 = IDMService.getCon().prepareStatement(query2);
                 ps2.setString(1, email);
@@ -639,6 +641,7 @@ public class HelperXuan {
                 ps2.setInt(4, deliveryID);
                 ps2.setInt(5, locationID);
                 ps2.setInt(6, workerID);
+                ps2.setString(7, token);
                 ServiceLogger.LOGGER.info("Trying insert: " + ps.toString());
                 ps2.executeUpdate();
                 ServiceLogger.LOGGER.warning("Order is placed successfully.");
