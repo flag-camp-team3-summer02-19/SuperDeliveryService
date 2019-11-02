@@ -11,6 +11,7 @@ import SuperDelivery.service.idm.models.OrderSummary.OrderSummaryBuilder;
 import SuperDelivery.service.idm.models.PackageInfo.PackageInfoBuilder;
 import SuperDelivery.service.idm.security.Session;
 import SuperDelivery.service.idm.security.Token;
+import com.google.maps.DirectionsApi;
 import com.google.maps.DistanceMatrixApi;
 import com.google.maps.GeoApiContext;
 import com.google.maps.GeocodingApi;
@@ -153,12 +154,8 @@ public class HelperXuan {
                         builder.setDeliveryStatus(rs.getInt("deliveryStatus"));
                     }
 
-                    // Get current location's lat and lon
-                    // TODO: implement updateLocation() function to update package's current lat and lon location
-                    //       and save them to location_info table; meanwhile, this function can also change deliveryStatus
-                    //       in delivery_info table if package is delivered.
-                    //       If need to provide notification to users, this function need to be run continuously at backend.
-                    updateLocation();
+                    // Update delivery and location information for this order
+                    updateOrder(orderID);
                     query = "SELECT currentLat, currentLon FROM location_info WHERE locationID = ?";
                     ps = IDMService.getCon().prepareStatement(query);
                     ps.setInt(1, locationID);
@@ -200,26 +197,38 @@ public class HelperXuan {
         return orderIDs;
     }
 
-    // TODO: implement updateLocation() function to update package's current lat and lon location
-    //       and save them to location_info table; meanwhile, this function can also change deliveryStatus
-    //       in delivery_info table if package is delivered.
-    //       If need to provide notification to users, this function need to be run continuously at backend.
-    public static void updateLocation() {}
-
-    public static void updateOrder(int orderID) {
+    private static void updateOrder(int orderID) {
         try {
-            // Get IDs
-            String query = "SELECT package, delivery, location, worker FROM orders WHERE orderID = ?";
+            Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+            // Fetch IDs and ordered time
+            String query = "SELECT orderedTime, package, delivery, location, worker FROM orders WHERE orderID = ?";
             PreparedStatement ps = IDMService.getCon().prepareStatement(query);
             ps.setInt(1, orderID);
             ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
             ResultSet rs = ps.executeQuery();
             ServiceLogger.LOGGER.info("Query succeeded.");
             rs.next();
+            Timestamp orderedTime = rs.getTimestamp("orderedTime");
             int packageID = rs.getInt("package");
             int deliveryID = rs.getInt("delivery");
             int locationID = rs.getInt("location");
             int workerID = rs.getInt("worker");
+            if (workerID == 0) {
+                ServiceLogger.LOGGER.info("This order is completed and has already been updated before.");
+                return;
+            }
+
+            // Fetch package origin and destination location
+            query = "SELECT pkgFrom, pkgTo FROM package_info WHERE packageID = ?";
+            ps = IDMService.getCon().prepareStatement(query);
+            ps.setInt(1, packageID);
+            ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
+            rs = ps.executeQuery();
+            ServiceLogger.LOGGER.info("Query succeeded.");
+            rs.next();
+            LocationLatLon orgLatLon = getLatLon(rs.getString("pkgFrom"));
+            LocationLatLon dstLatLon = getLatLon(rs.getString("pkgTo"));
+
             // Get delivery time and update delivery status
             query = "SELECT deliveryTime FROM delivery_info WHERE deliveryID = ?";
             ps = IDMService.getCon().prepareStatement(query);
@@ -230,8 +239,24 @@ public class HelperXuan {
             rs.next();
             Timestamp deliveryTime = rs.getTimestamp("deliveryTime");
             updateDeliveryStatus(deliveryID, workerID);
+            if (currentTime.after(deliveryTime)) {
+                ServiceLogger.LOGGER.info("This order is completed. Updating...");
+                query = "UPDATE orders SET worker = NULL WHERE orderID = ?";
+                ps = IDMService.getCon().prepareStatement(query);
+                ps.setInt(1, deliveryID);
+                ps.execute();
+                String query2 = "UPDATE location_info SET currentLat = ?, currentLon = ? WHERE locationID = ?";
+                PreparedStatement ps2 = IDMService.getCon().prepareStatement(query2);
+                ps2.setBigDecimal(1, dstLatLon.getLat());
+                ps2.setBigDecimal(2, dstLatLon.getLon());
+                ps2.setInt(3, locationID);
+                ps2.execute();
+                ServiceLogger.LOGGER.info("Update complete.");
+                return;
+            }
+
             // Get worker pickup time and its warehouse information
-            query = "SELECT pickupTime, warehouse FROM workers WHERE workerID = ?";
+            query = "SELECT pickupTime, warehouse, workerType FROM workers WHERE workerID = ?";
             ps = IDMService.getCon().prepareStatement(query);
             ps.setInt(1, workerID);
             ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
@@ -240,38 +265,87 @@ public class HelperXuan {
             rs.next();
             Timestamp pickupTime = rs.getTimestamp("pickupTime");
             Warehouse warehouse = Warehouse.getInstance(rs.getString("warehouse"));
+            WorkerType workerType = WorkerType.getInstance(rs.getString("workerType"));
+
             // Update package and worker location
-            query = "SELECT pkgFrom, pkgTo FROM package_info WHERE packageID = ?";
-            ps = IDMService.getCon().prepareStatement(query);
-            ps.setInt(1, packageID);
-            ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
-            rs = ps.executeQuery();
-            ServiceLogger.LOGGER.info("Query succeeded.");
-            rs.next();
-            LocationLatLon orgLatLon = getLatLon(rs.getString("pkgFrom"));
-            LocationLatLon dstLatLon = getLatLon(rs.getString("pkgTo"));
-            Timestamp currentTime = new Timestamp(System.currentTimeMillis());
-//            if (currentTime.before(pickupTime)) {
-//
-//            } else if (currentTime.before(deliveryTime)) {
-//
-//            } else {
-//                String query
-//            }
-
-
-
-
-
-
-
-//            Timestamp orderedTime = new Timestamp(System.currentTimeMillis());
-//            Timestamp pickupTime = new Timestamp(orderedTime.getTime() + duration1);
-//            Timestamp deliveryTime = new Timestamp(pickupTime.getTime() + duration2);
-//            Timestamp availableTime = new Timestamp(deliveryTime.getTime() + duration3);
+            if (currentTime.before(pickupTime)) {
+                ServiceLogger.LOGGER.info("Worker is on its way to your pickup address.");
+                long duration = (currentTime.getTime() - orderedTime.getTime()) / 1000;
+                LocationLatLon workerLatLon = getCurrentLocation(warehouse.getLocation(), orgLatLon, duration, workerType);
+                String query2 = "UPDATE workers SET workerLat = ?, workerLon = ? WHERE workerID = ?";
+                PreparedStatement ps2 = IDMService.getCon().prepareStatement(query2);
+                ps2.setBigDecimal(1, workerLatLon.getLat());
+                ps2.setBigDecimal(2, workerLatLon.getLon());
+                ps2.setInt(3, workerID);
+                ps2.execute();
+                ServiceLogger.LOGGER.info("Update complete.");
+            } else {
+                ServiceLogger.LOGGER.info("Worker is on its way to your delivery address.");
+                long duration = (currentTime.getTime() - pickupTime.getTime()) / 1000;
+                LocationLatLon workerLatLon = getCurrentLocation(orgLatLon, dstLatLon, duration, workerType);
+                String query2 = "UPDATE workers SET workerLat = ?, workerLon = ? WHERE workerID = ?";
+                PreparedStatement ps2 = IDMService.getCon().prepareStatement(query2);
+                ps2.setBigDecimal(1, workerLatLon.getLat());
+                ps2.setBigDecimal(2, workerLatLon.getLon());
+                ps2.setInt(3, workerID);
+                ps2.execute();
+                query2 = "UPDATE location_info SET currentLat = ?, currentLon = ? WHERE locationID = ?";
+                ps2 = IDMService.getCon().prepareStatement(query2);
+                ps2.setBigDecimal(1, workerLatLon.getLat());
+                ps2.setBigDecimal(2, workerLatLon.getLon());
+                ps2.setInt(3, locationID);
+                ps2.execute();
+                ServiceLogger.LOGGER.info("Update complete.");
+            }
         } catch (SQLException e) {
             ServiceLogger.LOGGER.warning("Error during query.");
             e.printStackTrace();
+        }
+    }
+
+    private static LocationLatLon getCurrentLocation(LocationLatLon org, LocationLatLon dst, long durationSec, WorkerType workerType) {
+        LocationLatLonBuilder builder = new LocationLatLonBuilder();
+        LocationLatLon current = null;
+        if (workerType.isGeodesic()) {
+            double ratio = durationSec / (computeDistanceBetween(org, dst, workerType.isGeodesic()) / workerType.getSpeed());
+            double currentLat = org.getLat().doubleValue() + ratio * (dst.getLat().doubleValue() - org.getLat().doubleValue());
+            double currentLon = org.getLon().doubleValue() + ratio * (dst.getLon().doubleValue() - org.getLon().doubleValue());
+            builder.setLat(BigDecimal.valueOf(currentLat));
+            builder.setLon(BigDecimal.valueOf(currentLon));
+            current = builder.build();
+            return current;
+        } else {
+            try {
+                GeoApiContext context = IDMService.getGeoApiContext();
+                LatLng orgLatLon = new LatLng(org.getLat().doubleValue(), org.getLon().doubleValue());
+                LatLng dstLatLon = new LatLng(dst.getLat().doubleValue(), dst.getLon().doubleValue());
+                DirectionsResult result = DirectionsApi.newRequest(context)
+                        .origin(orgLatLon)
+                        .destination(dstLatLon)
+                        .mode(TravelMode.WALKING)
+                        .await();
+                DirectionsStep[] steps = result.routes[0].legs[0].steps;
+                int nSteps = steps.length;
+                int curStep = 0;
+                while (curStep < nSteps && durationSec > steps[curStep].duration.inSeconds) {
+                    durationSec -= steps[curStep].duration.inSeconds;
+                    curStep++;
+                }
+                if (curStep == nSteps) {
+                    return dst;
+                }
+                double ratio = (double) (durationSec / steps[curStep].duration.inSeconds);
+                double currentLat = steps[curStep].startLocation.lat + ratio * (steps[curStep].endLocation.lat - steps[curStep].startLocation.lat);
+                double currentLon = steps[curStep].startLocation.lng + ratio * (steps[curStep].endLocation.lng - steps[curStep].startLocation.lng);
+                builder.setLat(BigDecimal.valueOf(currentLat));
+                builder.setLon(BigDecimal.valueOf(currentLon));
+                current = builder.build();
+                return current;
+            } catch (Exception e) {
+                ServiceLogger.LOGGER.warning("Google map Directions API cannot compute directions.");
+                e.printStackTrace();
+                return current;
+            }
         }
     }
 
@@ -329,6 +403,8 @@ public class HelperXuan {
             int workerID = rs.getInt("worker");
             orderDetail.setPackageInfo(getPackageInfo(packageID));
             orderDetail.setDeliveryInfo(getDeliveryInfo(deliveryID));
+            // Update delivery and location information for this order
+            updateOrder(orderID);
             orderDetail.setLocationInfo(getLocationInfo(locationID, workerID));
         } catch (SQLException e) {
             ServiceLogger.LOGGER.warning("Error during query.");
@@ -388,10 +464,6 @@ public class HelperXuan {
     private static LocationInfo getLocationInfo (int locationID, int workerID) {
         LocationInfoBuilder builder = new LocationInfoBuilder();
         LocationLatLonBuilder latLonBuilder = new LocationLatLonBuilder();
-
-        // update current location
-        updateLocation();
-
         try {
             String query = "SELECT * FROM location_info WHERE locationID = ?";
             PreparedStatement ps = IDMService.getCon().prepareStatement(query);

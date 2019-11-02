@@ -49,4 +49,15 @@ public enum WorkerType {
             return null;
         }
     }
+
+    public static WorkerType getInstance(String dbName) {
+        switch (dbName) {
+            case "ROBOT":
+                return ROBOT;
+            case "DRONE":
+                return DRONE;
+            default:
+                return null;
+        }
+    }
 }
