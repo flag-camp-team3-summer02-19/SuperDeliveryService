@@ -281,8 +281,8 @@ public class MySQLTableCreation {
             sql = "INSERT IGNORE INTO location_info (locationID, currentLat, currentLon, destinationLat, destinationLon) "
                     + "VALUES (1, 37.715342, -122.463503, 38.931386, -121.038749)";
             statement.executeUpdate(sql);
-            sql = "INSERT IGNORE INTO orders (orderID, email, package, delivery, location) "
-                    + "VALUES (1, 'xuanli@gmail.com', 1, 1, 1)";
+            sql = "INSERT IGNORE INTO orders (orderID, email, package, delivery, location, worker) "
+                    + "VALUES (1, 'xuanli@gmail.com', 1, 1, 1, 1)";
             statement.executeUpdate(sql);
 
             // fake order 2
@@ -295,8 +295,8 @@ public class MySQLTableCreation {
             sql = "INSERT IGNORE INTO location_info (locationID, currentLat, currentLon, destinationLat, destinationLon) "
                     + "VALUES (2, 36.807364, -121.983462, 39.075143, -122.673974)";
             statement.executeUpdate(sql);
-            sql = "INSERT IGNORE INTO orders (orderID, email, package, delivery, location) "
-                    + "VALUES (2, 'xuanli@gmail.com', 2, 2, 2)";
+            sql = "INSERT IGNORE INTO orders (orderID, email, package, delivery, location, worker) "
+                    + "VALUES (2, 'xuanli@gmail.com', 2, 2, 2, 2)";
             statement.executeUpdate(sql);
 
         } catch (Exception e) {
