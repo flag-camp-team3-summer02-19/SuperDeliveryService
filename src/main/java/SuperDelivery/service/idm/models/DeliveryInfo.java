@@ -1,5 +1,6 @@
 package SuperDelivery.service.idm.models;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -18,6 +19,15 @@ public class DeliveryInfo {
     private float cost;
     @JsonIgnore
     private int workerID;
+
+    @JsonCreator
+    public DeliveryInfo(@JsonProperty(value = "deliveryType", required = true) int deliveryType,
+                        @JsonProperty(value = "deliveryTime", required = true) Timestamp deliveryTime,
+                        @JsonProperty(value = "cost", required = true) float cost) {
+        this.deliveryType = deliveryType;
+        this.deliveryTime =deliveryTime;
+        this.cost =cost;
+    }
 
     private DeliveryInfo(DeliveryInfoBuilder builder) {
         this.deliveryType = builder.deliveryType;
