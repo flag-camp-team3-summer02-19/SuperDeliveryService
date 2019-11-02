@@ -209,7 +209,7 @@ public class HelperXuan {
 
     public static void getOrderDetail(OrderDetailResponseModel orderDetail, int orderID) {
         try {
-            String query = "SELECT package, delivery, location FROM orders WHERE orderID = ?";
+            String query = "SELECT package, delivery, location, worker FROM orders WHERE orderID = ?";
             PreparedStatement ps = IDMService.getCon().prepareStatement(query);
             ps.setInt(1, orderID);
             ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
@@ -222,9 +222,10 @@ public class HelperXuan {
             int packageID = rs.getInt("package");
             int deliveryID = rs.getInt("delivery");
             int locationID = rs.getInt("location");
+            int workerID = rs.getInt("worker");
             orderDetail.setPackageInfo(getPackageInfo(packageID));
             orderDetail.setDeliveryInfo(getDeliveryInfo(deliveryID));
-            orderDetail.setLocationInfo(getLocationInfo(locationID));
+            orderDetail.setLocationInfo(getLocationInfo(locationID, workerID));
         } catch (SQLException e) {
             ServiceLogger.LOGGER.warning("Error during query.");
             e.printStackTrace();
@@ -280,7 +281,7 @@ public class HelperXuan {
         return builder.build();
     }
 
-    private static LocationInfo getLocationInfo (int locationID) {
+    private static LocationInfo getLocationInfo (int locationID, int workerID) {
         LocationInfoBuilder builder = new LocationInfoBuilder();
         LocationLatLonBuilder latLonBuilder = new LocationLatLonBuilder();
 
@@ -303,6 +304,18 @@ public class HelperXuan {
                 latLonBuilder.setLat(rs.getBigDecimal("destinationLat"));
                 latLonBuilder.setLon(rs.getBigDecimal("destinationLon"));
                 builder.setDestination(latLonBuilder.build());
+            }
+            query = "SELECT workerLat, workerLon FROM workers WHERE workerID = ?";
+            ps = IDMService.getCon().prepareStatement(query);
+            ps.setInt(1, workerID);
+            ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
+            rs = ps.executeQuery();
+            ServiceLogger.LOGGER.info("Query succeeded.");
+            while (rs.next()) {
+                // set worker location
+                latLonBuilder.setLat(rs.getBigDecimal("workerLat"));
+                latLonBuilder.setLon(rs.getBigDecimal("workerLon"));
+                builder.setWorker(latLonBuilder.build());
             }
         } catch (SQLException e) {
             ServiceLogger.LOGGER.warning("Error during query.");
@@ -338,7 +351,7 @@ public class HelperXuan {
         DeliveryInfo cheapestDelivery = getCheapestDelivery(orgLatLon, dstLatLon, pkgInfo);
         DeliveryInfo fastestDelivery = getFastestDelivery(orgLatLon, dstLatLon, pkgInfo);
         // First release all previously held workers
-        releaseWorkerForUser(email);
+        releaseHoldWorkerForUser(email);
         if (cheapestDelivery != null && fastestDelivery != null) {
             holdWorkerForUser(email, cheapestDelivery.getWorkerID());
             holdWorkerForUser(email, fastestDelivery.getWorkerID());
@@ -375,7 +388,7 @@ public class HelperXuan {
         }
     }
 
-    private static void releaseWorkerForUser(String email) {
+    private static void releaseHoldWorkerForUser(String email) {
         try {
             String query = "UPDATE workers SET holdFor = NULL WHERE holdFor = ?";
             PreparedStatement ps = IDMService.getCon().prepareStatement(query);
@@ -554,20 +567,100 @@ public class HelperXuan {
     private static boolean prepareOrder(PackageInfo pkgInfo, DeliveryInfo dlvInfo, String sessionID) {
         // Populate order information
         String email = getEmail(sessionID);
-        WorkerType workerType = null;
-        if (dlvInfo.getDeliveryType() == ROBOT_TYPEID) {
-            workerType = WorkerType.ROBOT;
-        } else if (dlvInfo.getDeliveryType() == DRONE_TYPEID) {
-            workerType = WorkerType.DRONE;
-        } else {
-            ServiceLogger.LOGGER.warning("DeliveryType does not have a related WorkerType model.");
-            return false;
+        // Get worker type
+        WorkerType workerType = WorkerType.getInstance(dlvInfo.getDeliveryType());
+        try {
+            String query = "SELECT workerID, warehouse FROM workers WHERE holdFor = ? AND workerType = ?";
+            PreparedStatement ps = IDMService.getCon().prepareStatement(query);
+            ps.setString(1, email);
+            ps.setString(2, workerType.getDbName());
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                ServiceLogger.LOGGER.info("Hold worker exists.");
+                int workerID = rs.getInt("workerID");
+                // Get warehouse
+                Warehouse warehouse = Warehouse.getInstance(rs.getString("warehouse"));
+                LocationLatLon orgLatLon = getLatLon(pkgInfo.getPkgFrom());
+                LocationLatLon dstLatLon = getLatLon(pkgInfo.getPkgTo());
+                // Compute key timestamp
+                double distance1 = computeDistanceBetween(warehouse.getLocation(), orgLatLon, workerType.isGeodesic());
+                double distance2 = computeDistanceBetween(orgLatLon, dstLatLon, workerType.isGeodesic());
+                double distance3 = computeDistanceBetween(dstLatLon, warehouse.getLocation(), workerType.isGeodesic());
+                long duration1 = (long) (distance1 / workerType.getSpeed() * 1000); //unit: ms
+                long duration2 = (long) (distance2 / workerType.getSpeed() * 1000);
+                long duration3 = (long) (distance3 / workerType.getSpeed() * 1000);
+                Timestamp orderedTime = new Timestamp(System.currentTimeMillis());
+                Timestamp pickupTime = new Timestamp(orderedTime.getTime() + duration1);
+                Timestamp deliveryTime = new Timestamp(pickupTime.getTime() + duration2);
+                Timestamp availableTime = new Timestamp(deliveryTime.getTime() + duration3);
+                // Bind the hold worker
+                boolean res = bindWorker(workerID, pickupTime, availableTime);
+                if (!res) {
+                    return false;
+                }
+                // Need to release user's hold workers
+                releaseHoldWorkerForUser(email);
+                // Bind the package info
+                int packageID = bindPackageInfo(pkgInfo);
+                if (packageID == -1) {
+                    return false;
+                }
+                // Bind the delivery info
+                int deliveryID = bindDeliveryInfo(dlvInfo, deliveryTime);
+                if (deliveryID == - 1) {
+                    return false;
+                }
+                // Bind the location info
+                int locationID = bindLocationInfo(pkgInfo);
+                if (locationID == - 1) {
+                    return false;
+                }
+                String query2 = "INSERT INTO orders (email, orderedTime, package, delivery, location, worker)"
+                        + "VALUES (?, ?, ?, ?, ?, ?)";
+                PreparedStatement ps2 = IDMService.getCon().prepareStatement(query2);
+                ps2.setString(1, email);
+                ps2.setTimestamp(2, orderedTime);
+                ps2.setInt(3, packageID);
+                ps2.setInt(4, deliveryID);
+                ps2.setInt(5, locationID);
+                ps2.setInt(6, workerID);
+                ServiceLogger.LOGGER.info("Trying insert: " + ps.toString());
+                ps2.executeUpdate();
+                ServiceLogger.LOGGER.warning("Order is placed successfully.");
+                return true;
+            } else {
+                ServiceLogger.LOGGER.info("Hold worker has been released (payment not received within " + MAXHOLD/1000/60 + " min.");
+                return false;
+            }
+        } catch (SQLException e) {
+            ServiceLogger.LOGGER.warning("Error during query.");
+            e.printStackTrace();
+        } catch (Exception e) {
+            ServiceLogger.LOGGER.warning("There might be a model mismatch problem. Check WorkerType or Warehouse.");
+            e.printStackTrace();
         }
-
-        return true;
+        return false;
     }
 
-    private static int insertPackageInfo(PackageInfo pkgInfo) {
+    private static boolean bindWorker(int workerID, Timestamp pickupTime, Timestamp availableTime) {
+        try {
+            String query = "UPDATE workers SET pickupTime = ?, availableTime = ? WHERE workerID = ?";
+            PreparedStatement ps = IDMService.getCon().prepareStatement(query);
+            ps.setTimestamp(1, pickupTime);
+            ps.setTimestamp(2, availableTime);
+            ps.setInt(3, workerID);
+            ServiceLogger.LOGGER.info("Trying update: " + ps.toString());
+            ps.execute();
+            ServiceLogger.LOGGER.warning("Binding worker successfully.");
+            return true;
+        } catch (SQLException e) {
+            ServiceLogger.LOGGER.warning("Error during binding worker.");
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    private static int bindPackageInfo(PackageInfo pkgInfo) {
         // Return packageID if insert successfully, otherwise return -1
         try {
             String query = "INSERT INTO package_info (pkgLength, pkgWidth, pkgHeight, pkgWeight, pkgFrom, pkgTo, pkgNotes) "
@@ -580,43 +673,65 @@ public class HelperXuan {
             ps.setString(5, pkgInfo.getPkgFrom());
             ps.setString(6, pkgInfo.getPkgTo());
             ps.setString(7, pkgInfo.getPkgNotes());
+            ServiceLogger.LOGGER.info("Trying insert: " + ps.toString());
             ps.executeUpdate();
+            ServiceLogger.LOGGER.warning("Binding package info successfully.");
             ResultSet rs = ps.getGeneratedKeys();
             rs.next();
             return rs.getInt(1);
         } catch (SQLException e) {
-            ServiceLogger.LOGGER.warning("Error during insert.");
+            ServiceLogger.LOGGER.warning("Error during binding package info.");
             e.printStackTrace();
         }
         return -1;
     }
 
-    private static int insertDeliveryInfo(DeliveryInfo dlvInfo) {
+    private static int bindDeliveryInfo(DeliveryInfo dlvInfo, Timestamp deliveryTime) {
         // Return deliveryID if insert successfully, otherwise return -1
         try {
             String query = "INSERT INTO delivery_info (deliveryType, deliveryTime, deliveryStatus, cost) "
                     + "VALUES (?, ?, ?, ?)";
             PreparedStatement ps = IDMService.getCon().prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);
             ps.setInt(1, dlvInfo.getDeliveryType());
-            ps.setTimestamp(2, dlvInfo.getDeliveryTime());
+            ps.setTimestamp(2, deliveryTime);
             ps.setInt(3, ORDER_PLACED);
             ps.setFloat(4, dlvInfo.getCost());
+            ServiceLogger.LOGGER.info("Trying insert: " + ps.toString());
             ps.executeUpdate();
+            ServiceLogger.LOGGER.warning("Binding delivery info successfully.");
             ResultSet rs = ps.getGeneratedKeys();
             rs.next();
             return rs.getInt(1);
         } catch (SQLException e) {
-            ServiceLogger.LOGGER.warning("Error during insert.");
+            ServiceLogger.LOGGER.warning("Error during binding delivery info.");
             e.printStackTrace();
         }
         return -1;
     }
 
-//    private static int insertLocationInfo(PackageInfo pkgInfo) {
-//        try {
-//
-//        } catch ()
-//    }
+    private static int bindLocationInfo(PackageInfo pkgInfo) {
+        try {
+            LocationLatLon current = getLatLon(pkgInfo.getPkgFrom());
+            LocationLatLon destination = getLatLon(pkgInfo.getPkgTo());
+            String query = "INSERT INTO location_info (currentLat, currentLon, destinationLat, destinationLon)"
+                    + "VALUES (?, ?, ?, ?)";
+            PreparedStatement ps = IDMService.getCon().prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);
+            ps.setBigDecimal(1, current.getLat());
+            ps.setBigDecimal(2, current.getLon());
+            ps.setBigDecimal(3, destination.getLat());
+            ps.setBigDecimal(4, destination.getLon());
+            ServiceLogger.LOGGER.info("Trying insert: " + ps.toString());
+            ps.executeUpdate();
+            ServiceLogger.LOGGER.warning("Binding location info successfully.");
+            ResultSet rs = ps.getGeneratedKeys();
+            rs.next();
+            return rs.getInt(1);
+        } catch (SQLException e) {
+            ServiceLogger.LOGGER.warning("Error during binding location info.");
+            e.printStackTrace();
+        }
+        return -1;
+    }
 
 
 
