@@ -15,6 +15,7 @@ import com.google.maps.DistanceMatrixApi;
 import com.google.maps.GeoApiContext;
 import com.google.maps.GeocodingApi;
 import com.google.maps.model.*;
+import org.yaml.snakeyaml.events.Event;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
@@ -24,8 +25,7 @@ import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
 
-import static SuperDelivery.service.idm.constants.DeliveryServiceInfo.MAXHOLD;
-import static SuperDelivery.service.idm.constants.DeliveryServiceInfo.ORDER_PLACED;
+import static SuperDelivery.service.idm.constants.DeliveryServiceInfo.*;
 
 public class HelperXuan {
     public static boolean isSessionValid(String sessionID) {
@@ -184,7 +184,7 @@ public class HelperXuan {
         Set<Integer> orderIDs = new HashSet<>();
 
         try {
-            String query = "SELECT orderID FROM orders WHERE email=?";
+            String query = "SELECT orderID FROM orders WHERE email=? AND transactionID IS NOT NULL";
             PreparedStatement ps = IDMService.getCon().prepareStatement(query);
             ps.setString(1, email);
             ServiceLogger.LOGGER.info("Trying to retrieve orderIDs.");
@@ -205,23 +205,110 @@ public class HelperXuan {
     //       in delivery_info table if package is delivered.
     //       If need to provide notification to users, this function need to be run continuously at backend.
     public static void updateLocation() {}
-    public static void updateLocation(int orderID, int workerID) {
-//        try {
-//            // Retrieve time information
-//            String query = "SELECT orderedTime, delivery FROM ";
-//            PreparedStatement ps = IDMService.getCon().prepareStatement(query);
+
+    public static void updateOrder(int orderID) {
+        try {
+            // Get IDs
+            String query = "SELECT package, delivery, location, worker FROM orders WHERE orderID = ?";
+            PreparedStatement ps = IDMService.getCon().prepareStatement(query);
+            ps.setInt(1, orderID);
+            ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
+            ResultSet rs = ps.executeQuery();
+            ServiceLogger.LOGGER.info("Query succeeded.");
+            rs.next();
+            int packageID = rs.getInt("package");
+            int deliveryID = rs.getInt("delivery");
+            int locationID = rs.getInt("location");
+            int workerID = rs.getInt("worker");
+            // Get delivery time and update delivery status
+            query = "SELECT deliveryTime FROM delivery_info WHERE deliveryID = ?";
+            ps = IDMService.getCon().prepareStatement(query);
+            ps.setInt(1, deliveryID);
+            ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
+            rs = ps.executeQuery();
+            ServiceLogger.LOGGER.info("Query succeeded.");
+            rs.next();
+            Timestamp deliveryTime = rs.getTimestamp("deliveryTime");
+            updateDeliveryStatus(deliveryID, workerID);
+            // Get worker pickup time and its warehouse information
+            query = "SELECT pickupTime, warehouse FROM workers WHERE workerID = ?";
+            ps = IDMService.getCon().prepareStatement(query);
+            ps.setInt(1, workerID);
+            ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
+            rs = ps.executeQuery();
+            ServiceLogger.LOGGER.info("Query succeeded.");
+            rs.next();
+            Timestamp pickupTime = rs.getTimestamp("pickupTime");
+            Warehouse warehouse = Warehouse.getInstance(rs.getString("warehouse"));
+            // Update package and worker location
+            query = "SELECT pkgFrom, pkgTo FROM package_info WHERE packageID = ?";
+            ps = IDMService.getCon().prepareStatement(query);
+            ps.setInt(1, packageID);
+            ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
+            rs = ps.executeQuery();
+            ServiceLogger.LOGGER.info("Query succeeded.");
+            rs.next();
+            LocationLatLon orgLatLon = getLatLon(rs.getString("pkgFrom"));
+            LocationLatLon dstLatLon = getLatLon(rs.getString("pkgTo"));
+            Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+//            if (currentTime.before(pickupTime)) {
 //
+//            } else if (currentTime.before(deliveryTime)) {
 //
-//
+//            } else {
+//                String query
+//            }
+
+
+
+
+
+
+
 //            Timestamp orderedTime = new Timestamp(System.currentTimeMillis());
 //            Timestamp pickupTime = new Timestamp(orderedTime.getTime() + duration1);
 //            Timestamp deliveryTime = new Timestamp(pickupTime.getTime() + duration2);
 //            Timestamp availableTime = new Timestamp(deliveryTime.getTime() + duration3);
-//        } catch (SQLException e) {
-//            ServiceLogger.LOGGER.warning("Error during query.");
-//            e.printStackTrace();
-//        }
+        } catch (SQLException e) {
+            ServiceLogger.LOGGER.warning("Error during query.");
+            e.printStackTrace();
+        }
+    }
 
+    private static void updateDeliveryStatus(int deliveryID, int workerID) {
+        try {
+            String query = "SELECT deliveryTime FROM delivery_info WHERE deliveryID = ?";
+            PreparedStatement ps = IDMService.getCon().prepareStatement(query);
+            ps.setInt(1, deliveryID);
+            ResultSet rs = ps.executeQuery();
+            rs.next();
+            Timestamp deliveryTime = rs.getTimestamp("deliveryTime");
+
+            String query2 = "UPDATE delivery_info SET deliveryStatus = ? WHERE deliveryID = ?";
+            PreparedStatement ps2 = IDMService.getCon().prepareStatement(query2);
+            Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+            ps2.setInt(2, deliveryID);
+            if (currentTime.after(deliveryTime)) {
+                ps2.setInt(1, DELIVERED);
+                ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
+                ps2.execute();
+                ServiceLogger.LOGGER.info("DeliveryStatus update successfully.");
+            } else if (isWorkerReadyToGo(workerID)) {
+                ps2.setInt(1, IN_PROGRESS);
+                ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
+                ps2.execute();
+                ServiceLogger.LOGGER.info("DeliveryStatus update successfully.");
+            }
+        } catch (SQLException e) {
+            ServiceLogger.LOGGER.warning("Error during query.");
+            e.printStackTrace();
+        }
+    }
+
+    // TODO: Now, worker is immediately sent out after the order is received.
+    //       This part is critical, since all timestamps are related to it.
+    private static  boolean isWorkerReadyToGo(int workerID) {
+        return true;
     }
 
     public static void getOrderDetail(OrderDetailResponseModel orderDetail, int orderID) {
