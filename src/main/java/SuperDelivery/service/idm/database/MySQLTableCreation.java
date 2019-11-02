@@ -187,6 +187,8 @@ public class MySQLTableCreation {
                     + "delivery int NOT NULL,"
                     + "location int NOT NULL,"
                     + "worker int,"
+                    + "token VARCHAR(50) NOT NULL,"
+                    + "transactionID VARCHAR(50),"
                     + "PRIMARY KEY (orderID),"
                     + "FOREIGN KEY (email) REFERENCES users (email) ON UPDATE CASCADE ON DELETE CASCADE,"
                     + "FOREIGN KEY (package) REFERENCES package_info (packageID) ON UPDATE CASCADE ON DELETE CASCADE,"

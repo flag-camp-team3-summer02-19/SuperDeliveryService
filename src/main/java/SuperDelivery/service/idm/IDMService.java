@@ -220,4 +220,8 @@ public class IDMService {
     public static GeoApiContext getGeoApiContext() {
         return context;
     }
+
+    public static ServiceConfigs getConfigs() {
+        return serviceConfigs;
+    }
 }

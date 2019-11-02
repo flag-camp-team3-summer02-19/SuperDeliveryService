@@ -199,4 +199,55 @@ public class Helper {
             e.printStackTrace();
         }
     }
+
+    public static void updateTransactionId(String transactionId,String token){
+        try {
+            // Construct the query
+            String query =
+                    "UPDATE orders SET transactionId=? WHERE token=?;";
+            // Create the prepared statement
+            PreparedStatement ps = IDMService.getCon().prepareStatement(query);
+            // Set the parameters
+            ps.setString(1, transactionId);
+            ps.setString(2, token);
+
+            // Execute query
+            ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
+            ps.execute();
+            ServiceLogger.LOGGER.info("Query succeeded.");
+
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static boolean checkIfTokenInTransactions(String token)
+    {
+        try {
+            // Construct the query
+            String query =
+                    "SELECT COUNT(*) FROM orders WHERE token=?;";
+            // Create the prepared statement
+            PreparedStatement ps = IDMService.getCon().prepareStatement(query);
+            // Set the parameters
+            ps.setString(1, token);
+
+            // Execute query
+            ServiceLogger.LOGGER.info("Trying query: " + ps.toString());
+            ResultSet rs = ps.executeQuery();
+            ServiceLogger.LOGGER.info("Query succeeded.");
+            rs.next();
+            if(rs.getInt(1)>0){
+                ServiceLogger.LOGGER.info("This token exists.");
+                return true;
+            }
+
+            ServiceLogger.LOGGER.info("This token does not exist.");
+            return false;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }
