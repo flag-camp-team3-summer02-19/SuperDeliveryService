@@ -39,6 +39,9 @@ public class IDMService {
         service.initService(args);
         CreateTable(false, true);
         setGeoApiContext();
+
+        // TODO: DELETE IT AFTER TEST
+        Test.test();
     }
 
     private void initService(String[] args) {

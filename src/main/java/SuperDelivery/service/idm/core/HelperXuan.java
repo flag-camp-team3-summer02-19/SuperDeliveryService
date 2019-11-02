@@ -203,7 +203,22 @@ public class HelperXuan {
     //       and save them to location_info table; meanwhile, this function can also change deliveryStatus
     //       in delivery_info table if package is delivered.
     //       If need to provide notification to users, this function need to be run continuously at backend.
-    public static void updateLocation() {
+    public static void updateLocation(int orderID, int workerID) {
+        try {
+            // Retrieve time information
+            String query = "SELECT orderedTime, delivery FROM ";
+            PreparedStatement ps = IDMService.getCon().prepareStatement(query);
+
+
+
+            Timestamp orderedTime = new Timestamp(System.currentTimeMillis());
+            Timestamp pickupTime = new Timestamp(orderedTime.getTime() + duration1);
+            Timestamp deliveryTime = new Timestamp(pickupTime.getTime() + duration2);
+            Timestamp availableTime = new Timestamp(deliveryTime.getTime() + duration3);
+        } catch (SQLException e) {
+            ServiceLogger.LOGGER.warning("Error during query.");
+            e.printStackTrace();
+        }
 
     }
 
