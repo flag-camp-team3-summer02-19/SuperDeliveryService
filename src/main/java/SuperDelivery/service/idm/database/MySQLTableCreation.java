@@ -37,10 +37,10 @@ public class MySQLTableCreation {
                 sql = "DROP TABLE IF EXISTS session_status";
                 statement.executeUpdate(sql);
 
-                sql = "DROP TABLE IF EXISTS  workers";
+                sql = "DROP TABLE IF EXISTS orders";
                 statement.executeUpdate(sql);
 
-                sql = "DROP TABLE IF EXISTS orders";
+                sql = "DROP TABLE IF EXISTS  workers";
                 statement.executeUpdate(sql);
 
                 sql = "DROP TABLE IF EXISTS users";
@@ -172,6 +172,8 @@ public class MySQLTableCreation {
                     + "holdTime TIMESTAMP,"
                     + "pickupTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,"
                     + "availableTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,"
+                    + "workerLat DECIMAL(9,6) NOT NULL,"
+                    + "workerLon DECIMAL(9,6) NOT NULL,"
                     + "PRIMARY KEY (workerID),"
                     + "FOREIGN KEY (warehouse) REFERENCES warehouse_info(warehouseID)"
                     + ")";
@@ -226,6 +228,12 @@ public class MySQLTableCreation {
                     workerID++;
                 }
             }
+            sql = "UPDATE IGNORE workers SET workerLat = 37.766345, workerLon = -122.512029 WHERE warehouse = 1";
+            statement.execute(sql);
+            sql = "UPDATE IGNORE workers SET workerLat = 37.797750, workerLon = -122.408731 WHERE warehouse = 2";
+            statement.execute(sql);
+            sql = "UPDATE IGNORE workers SET workerLat = 37.711729, workerLon = -122.427705 WHERE warehouse = 3";
+            statement.execute(sql);
 
             // Step 5 Create database events
             sql = "SET GLOBAL event_scheduler = ON";
@@ -249,6 +257,7 @@ public class MySQLTableCreation {
             e.printStackTrace();
         }
     }
+
 
     private static void generateFakeData() {
         try {
