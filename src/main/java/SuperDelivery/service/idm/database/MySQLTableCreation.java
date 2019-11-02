@@ -363,7 +363,7 @@ public class MySQLTableCreation {
                     + "VALUES (7, 3, 0, 35.5)";
             statement.executeUpdate(sql);
             sql = "INSERT IGNORE INTO location_info (locationID, currentLat, currentLon, destinationLat, destinationLon) "
-                    + "VALUES (7, 37.797358, -122.441170, 38.931386, 37.752175, -122.397278)";
+                    + "VALUES (7, 37.797358, -122.441170, 37.752175, -122.397278)";
             statement.executeUpdate(sql);
             sql = "INSERT IGNORE INTO orders (orderID, email, package, delivery, location, worker) "
                     + "VALUES (7, 'xuanli@gmail.com', 7, 7, 7, 7)";
