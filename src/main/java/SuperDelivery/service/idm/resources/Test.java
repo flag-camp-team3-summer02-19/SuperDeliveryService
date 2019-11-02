@@ -37,7 +37,7 @@ public class Test {
                 String sessionID = sessionIDs.get(0);
                 if (isSessionValid(sessionID)) {
                     ServiceLogger.LOGGER.info("Session is valid");
-                    if (prepareOrder(requestModel.getOrder().getPackageInfo(), requestModel.getOrder().getDeliveryInfo(), sessionID)) {
+                    if (prepareOrder(requestModel.getOrder().getPackageInfo(), requestModel.getOrder().getDeliveryInfo(), sessionID, "0")) {
                         ServiceLogger.LOGGER.info("order is placed!");
                         return Response.status(Response.Status.OK).build();
                     } else {
