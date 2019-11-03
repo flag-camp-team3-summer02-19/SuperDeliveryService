@@ -16,7 +16,6 @@ import com.google.maps.DistanceMatrixApi;
 import com.google.maps.GeoApiContext;
 import com.google.maps.GeocodingApi;
 import com.google.maps.model.*;
-import org.yaml.snakeyaml.events.Event;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
@@ -197,7 +196,7 @@ public class HelperXuan {
         return orderIDs;
     }
 
-    private static void updateOrder(int orderID) {
+    public static void updateOrder(int orderID) {
         try {
             Timestamp currentTime = new Timestamp(System.currentTimeMillis());
             // Fetch IDs and ordered time
@@ -327,14 +326,18 @@ public class HelperXuan {
                 DirectionsStep[] steps = result.routes[0].legs[0].steps;
                 int nSteps = steps.length;
                 int curStep = 0;
-                while (curStep < nSteps && durationSec > steps[curStep].duration.inSeconds) {
-                    durationSec -= steps[curStep].duration.inSeconds;
+                while (curStep < nSteps) {
+                    long curDuration = (long) (steps[curStep].distance.inMeters / workerType.getSpeed());
+                    if (durationSec < curDuration) {
+                        break;
+                    }
+                    durationSec -= curDuration;
                     curStep++;
                 }
                 if (curStep == nSteps) {
                     return dst;
                 }
-                double ratio = (double) (durationSec / steps[curStep].duration.inSeconds);
+                double ratio = (double) durationSec / steps[curStep].duration.inSeconds;
                 double currentLat = steps[curStep].startLocation.lat + ratio * (steps[curStep].endLocation.lat - steps[curStep].startLocation.lat);
                 double currentLon = steps[curStep].startLocation.lng + ratio * (steps[curStep].endLocation.lng - steps[curStep].startLocation.lng);
                 builder.setLat(BigDecimal.valueOf(currentLat));
